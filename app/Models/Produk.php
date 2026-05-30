@@ -55,6 +55,36 @@ class Produk extends Model
         );
     }
 
+    // Accessor: Batas minimum stok otomatis berdasarkan satuan
+    public function getStokMinimumAttribute(): int
+    {
+        $satuan = strtolower($this->satuan ?? '');
+
+        if (in_array($satuan, ['pcs', 'biji', 'unit', 'buah'])) {
+            return 20;
+        }
+
+        return 1;
+    }
+
+    // Accessor: Status stok otomatis (UNLIMITED, HABIS, MENIPIS, AMAN)
+    public function getStatusStokAttribute(): string
+    {
+        if (!$this->lacak_stok) {
+            return 'UNLIMITED';
+        }
+
+        if ($this->stok_saat_ini <= 0) {
+            return 'HABIS';
+        }
+
+        if ($this->stok_saat_ini > 0 && $this->stok_saat_ini <= $this->stok_minimum) {
+            return 'MENIPIS';
+        }
+
+        return 'AMAN';
+    }
+
     public function kategori(): BelongsTo
     {
         return $this->belongsTo(Kategori::class, 'id_kategori', 'id_kategori');

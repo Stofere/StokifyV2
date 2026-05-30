@@ -211,6 +211,65 @@
             </div>
         </div>
 
+        {{-- Monitoring Gudang Row --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            {{-- Card 1: Total SKU Aktif --}}
+            <div class="bg-white rounded-2xl p-5 border border-slate-100 relative overflow-hidden group">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-pro rounded-r-full"></div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-blue-50 p-2.5 rounded-xl text-blue-pro">
+                        <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+                    </div>
+                </div>
+                <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400">Total SKU Aktif</p>
+                <h3 class="font-headline text-2xl font-bold text-charcoal mt-1">{{ number_format($totalSKU) }}</h3>
+                <p class="text-[10px] text-slate-400 mt-0.5 font-semibold">Produk dilacak stoknya</p>
+            </div>
+
+            {{-- Card 2: Stok Menipis (Yellow) --}}
+            <a href="{{ route('laporan.stok-menipis') }}" class="bg-white rounded-2xl p-5 border border-amber-200 relative overflow-hidden group hover:shadow-md hover:border-amber-300 transition-all cursor-pointer">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-r-full"></div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600">
+                        <span class="material-symbols-outlined text-[22px]">warning</span>
+                    </div>
+                </div>
+                <p class="text-[10px] font-label font-bold uppercase tracking-widest text-amber-600">Stok Menipis</p>
+                <h3 class="font-headline text-2xl font-bold text-amber-600 mt-1">{{ number_format($stokMenipis) }}</h3>
+                <p class="text-[10px] text-amber-500 mt-0.5 font-semibold">Mendekati batas minimum</p>
+            </a>
+
+            {{-- Card 3: Stok Habis (Red) --}}
+            <a href="{{ route('laporan.stok-menipis') }}" class="bg-white rounded-2xl p-5 border border-red-200 relative overflow-hidden group hover:shadow-md hover:border-red-300 transition-all cursor-pointer">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-r-full"></div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-red-50 p-2.5 rounded-xl text-red-600">
+                        <span class="material-symbols-outlined text-[22px]">error</span>
+                    </div>
+                </div>
+                <p class="text-[10px] font-label font-bold uppercase tracking-widest text-red-600">Stok Habis</p>
+                <h3 class="font-headline text-2xl font-bold text-red-600 mt-1">{{ number_format($stokHabis) }}</h3>
+                <p class="text-[10px] text-red-400 mt-0.5 font-semibold">Perlu segera restock</p>
+            </a>
+
+            {{-- Card 4: Nilai Inventaris (Owner Only) --}}
+            @if($isOwner)
+            <div class="bg-white rounded-2xl p-5 border border-slate-100 relative overflow-hidden group">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-full"></div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="bg-emerald-50 p-2.5 rounded-xl text-emerald-600">
+                        <span class="material-symbols-outlined text-[22px]">account_balance</span>
+                    </div>
+                </div>
+                <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400">Nilai Inventaris</p>
+                <h3 class="font-headline text-lg font-bold text-charcoal mt-1">Rp {{ number_format($nilaiInventaris, 0, ',', '.') }}</h3>
+                <p class="text-[10px] text-slate-400 mt-0.5 font-semibold">Total nilai jual di gudang</p>
+            </div>
+            @endif
+
+        </div>
+
         {{-- KPI Row --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 

@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\TransaksiPenjualan;
 use App\Models\TransaksiRetur;
 use App\Models\RiwayatStok;
+use App\Models\Produk;
 use App\Models\DetailPenjualan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -164,6 +165,25 @@ class Dashboard extends Component
             ->limit(8)
             ->get();
 
+        // 6. MONITORING GUDANG (Stok Menipis & Habis)
+        $baseGudang = Produk::where('status_aktif', true)->where('lacak_stok', true);
+        $totalSKU = (clone $baseGudang)->count();
+        $stokHabis = (clone $baseGudang)->where('stok_saat_ini', '<=', 0)->count();
+        $stokMenipis = (clone $baseGudang)->where('stok_saat_ini', '>', 0)
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->whereIn(DB::raw('LOWER(satuan)'), ['pcs', 'biji', 'unit', 'buah'])
+                      ->where('stok_saat_ini', '<=', 20);
+                })->orWhere(function ($q) {
+                    $q->whereNotIn(DB::raw('LOWER(satuan)'), ['pcs', 'biji', 'unit', 'buah'])
+                      ->where('stok_saat_ini', '<=', 1);
+                });
+            })->count();
+        $nilaiInventaris = Produk::where('status_aktif', true)
+            ->where('lacak_stok', true)
+            ->where('stok_saat_ini', '>', 0)
+            ->sum(DB::raw('stok_saat_ini * harga_jual_satuan'));
+
         return view('livewire.dashboard', [
             'isOwner' => $isOwner,
             'omsetHariIni' => $omsetHariIni,
@@ -174,6 +194,10 @@ class Dashboard extends Component
             'topMarketing' => $topMarketing,
             'topPelanggan' => $topPelanggan,
             'aktivitasHariIni' => $aktivitasHariIni,
+            'totalSKU' => $totalSKU,
+            'stokHabis' => $stokHabis,
+            'stokMenipis' => $stokMenipis,
+            'nilaiInventaris' => $nilaiInventaris,
         ]);
     }
 }

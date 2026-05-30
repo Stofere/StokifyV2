@@ -49,6 +49,7 @@
                     ['label' => '', 'divider' => true, 'text' => 'Laporan & Analitik'],
                     ['label' => 'Lap. Penjualan', 'icon' => 'bar_chart', 'href' => '/laporan/penjualan', 'match' => 'laporan/penjualan'],
                     ['label' => 'Lap. Katalog', 'icon' => 'pie_chart', 'href' => '/laporan/katalog', 'match' => 'laporan/katalog'],
+                    ['label' => 'Lap. Stok Menipis', 'icon' => 'notification_important', 'href' => '/laporan/stok-menipis', 'match' => 'laporan/stok-menipis'],
                     
                     ['label' => '', 'divider' => true, 'text' => 'Master Data'],
                     ['label' => 'Katalog Produk', 'icon' => 'inventory_2', 'href' => '/master/produk', 'match' => 'master/produk'],

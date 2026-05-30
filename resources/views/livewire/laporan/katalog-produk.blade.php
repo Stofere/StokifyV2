@@ -30,6 +30,7 @@
                     <th class="p-4 font-bold w-32">Kode / SKU</th>
                     <th class="p-4 font-bold">Nama Barang & Spesifikasi</th>
                     <th class="p-4 font-bold text-center w-32">Stok Sisa</th>
+                    <th class="p-4 font-bold text-center w-28">Status</th>
                     <th class="p-4 font-bold w-48">Lokasi</th>
                 </tr>
             </thead>
@@ -38,7 +39,7 @@
                     
                     {{-- HEADER GRUP KATEGORI --}}
                     <tr class="bg-blue-50">
-                        <td colspan="5" class="p-3 font-black text-blue-800 text-sm tracking-wide uppercase border-y border-blue-200">
+                        <td colspan="6" class="p-3 font-black text-blue-800 text-sm tracking-wide uppercase border-y border-blue-200">
                             🏷️ KATEGORI: {{ $namaKategori }}
                         </td>
                     </tr>
@@ -65,12 +66,29 @@
                                     <span class="text-xs text-gray-400 font-bold">Unlimited</span>
                                 @endif
                             </td>
+                            <td class="p-4 text-center">
+                                @if($prod->status_stok === 'AMAN')
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> AMAN
+                                    </span>
+                                @elseif($prod->status_stok === 'MENIPIS')
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> MENIPIS
+                                    </span>
+                                @elseif($prod->status_stok === 'HABIS')
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-red-600">
+                                        <span class="w-2 h-2 rounded-full bg-red-500"></span> HABIS
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400">—</span>
+                                @endif
+                            </td>
                             <td class="p-4 text-gray-600 font-semibold">{{ $prod->lokasi ?? '-' }}</td>
                         </tr>
                     @endforeach
 
                 @empty
-                    <tr><td colspan="5" class="p-10 text-center text-gray-500 font-bold">Tidak ada barang di kategori ini.</td></tr>
+                    <tr><td colspan="6" class="p-10 text-center text-gray-500 font-bold">Tidak ada barang di kategori ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

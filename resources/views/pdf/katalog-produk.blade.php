@@ -27,16 +27,17 @@
         <thead>
             <tr>
                 <th width="5%" class="center">No</th>
-                <th width="15%">Kode / SKU</th>
-                <th width="50%">Nama Barang & Spesifikasi</th>
-                <th width="15%" class="center">Stok</th>
-                <th width="15%">Lokasi</th>
+                <th width="12%">Kode / SKU</th>
+                <th width="40%">Nama Barang & Spesifikasi</th>
+                <th width="13%" class="center">Stok</th>
+                <th width="12%" class="center">Status</th>
+                <th width="18%">Lokasi</th>
             </tr>
         </thead>
         <tbody>
             @foreach($groupedProduk as $namaKategori => $produks)
                 <tr class="group-header">
-                    <td colspan="5">KATEGORI: {{ $namaKategori }}</td>
+                    <td colspan="6">KATEGORI: {{ $namaKategori }}</td>
                 </tr>
                 @php $nomor = 1; @endphp
                 @foreach($produks as $prod)
@@ -51,6 +52,17 @@
                             </span>
                         @else
                             Unlimited
+                        @endif
+                    </td>
+                    <td class="center">
+                        @if($prod->status_stok === 'AMAN')
+                            <strong style="color: #27ae60;">AMAN</strong>
+                        @elseif($prod->status_stok === 'MENIPIS')
+                            <strong style="color: #e67e22;">MENIPIS</strong>
+                        @elseif($prod->status_stok === 'HABIS')
+                            <strong style="color: #e74c3c;">HABIS</strong>
+                        @else
+                            <strong>—</strong>
                         @endif
                     </td>
                     <td>{{ $prod->lokasi ?? '-' }}</td>

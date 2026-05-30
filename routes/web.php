@@ -10,6 +10,7 @@ use App\Livewire\Transaksi\ReturPenjualan;
 use App\Livewire\Transaksi\RiwayatTransaksi;
 use App\Livewire\Laporan\Penjualan;
 use App\Livewire\Laporan\KatalogProduk;
+use App\Livewire\Laporan\StokMenipis;
 
 use App\Livewire\Master\PelangganIndex;
 use App\Livewire\Master\MarketingIndex;
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
     // Laporan
     Route::get('/laporan/penjualan', Penjualan::class)->name('laporan.penjualan');
     Route::get('/laporan/katalog', KatalogProduk::class)->name('laporan.katalog');
+    Route::get('/laporan/stok-menipis', StokMenipis::class)->name('laporan.stok-menipis');
 
     
     // Master Data
