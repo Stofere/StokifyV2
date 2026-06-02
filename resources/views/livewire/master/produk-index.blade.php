@@ -932,4 +932,14 @@
         </div>
     </div>
 
+    <script>
+        // Prevent scroll from changing number input values
+        // when user scrolls the page while input is focused 
+        document.addEventListener('wheel', function (e) {
+            if (document.activeElement.type === 'number') {
+                document.activeElement.blur();
+            }
+        }, { passive:true });
+    </script>
+
 </div>
