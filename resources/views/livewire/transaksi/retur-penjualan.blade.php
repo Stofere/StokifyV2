@@ -18,7 +18,7 @@
     {{-- TAMPILAN 1: DAFTAR NOTA PENCARIAN                                --}}
     {{-- ================================================================ --}}
     @if(!$notaTerpilih)
-        <div class="bg-white rounded-2xl overflow-hidden mb-6 {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+        <div class="bg-white rounded-2xl overflow-hidden mb-6 border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
             {{-- Filters --}}
             <div class="p-4 flex flex-wrap gap-3 items-end {{ $isOwnerRole ? 'bg-slate-50 border-b border-slate-200' : 'bg-[#F8F9FA] border-b border-sage/10' }}">
                 <div>
@@ -102,7 +102,7 @@
             </button>
         </div>
 
-        <div class="bg-white rounded-2xl overflow-hidden {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+        <div class="bg-white rounded-2xl overflow-hidden border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
             <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
                 <div>
                     <h3 class="font-headline text-lg font-bold">Detail Nota: {{ $notaTerpilih->kode_nota }}</h3>
@@ -168,8 +168,8 @@
             $totalSelisih = $selisihSatuan * (float)($qty_retur ?: 0);
         @endphp
 
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden relative shadow-2xl {{ $isOwnerRole ? 'border-t-4 border-blue-pro' : 'border-t-4 border-gold' }}">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <div class="bg-white rounded-2xl w-full max-w-5xl flex flex-col md:flex-row max-h-[92vh] overflow-y-auto relative shadow-2xl {{ $isOwnerRole ? 'border-t-4 border-blue-pro' : 'border-t-4 border-gold' }}">
 
                 {{-- Close Button --}}
                 <button wire:click="tutupModalRetur" class="absolute top-3 right-4 text-slate-400 hover:text-red-500 z-10 transition-colors">
@@ -319,7 +319,7 @@
                             <button type="submit"
                                     wire:confirm="Pastikan fisik barang lama dan uang selisih sudah diterima/dikembalikan. Lanjutkan proses?"
                                     class="px-6 py-2.5 rounded-xl font-bold text-sm text-white shadow-md transition-all
-                                           {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-gradient-to-r from-sage-dark to-sage hover:opacity-90' }}">
+                                           {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
                                 Proses Retur Sekarang
                             </button>
                         </div>

@@ -3,7 +3,7 @@
     $posBg = \App\Models\Setting::getValue('pos_background_image');
 @endphp
 
-<div class="flex flex-col md:flex-row h-[calc(100vh-3.5rem)] overflow-hidden fade-in relative"
+<div class="flex flex-col md:flex-row md:h-[calc(100vh-3.5rem)] md:overflow-hidden fade-in relative"
      x-data="{ 
         showPrices: true,
         jam: '',
@@ -42,7 +42,7 @@
     {{-- ============================== --}}
     {{-- LEFT: PRODUCT CATALOG (70%)    --}}
     {{-- ============================== --}}
-    <section class="w-full md:w-[70%] h-full flex flex-col p-4 md:p-6 overflow-y-auto relative z-10">
+    <section class="w-full md:w-[70%] md:h-full flex flex-col p-4 md:p-6 md:overflow-y-auto relative z-10">
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
             <div>
@@ -70,8 +70,8 @@
             <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
             <input type="text" wire:model.live.debounce.300ms="keyword"
                    placeholder="Cari SKU, Nama, Merk, Motif..."
-                   class="w-full pl-11 pr-4 py-3 rounded-xl border-0 font-body text-sm
-                          {{ $isOwnerRole ? 'bg-slate-100 focus:ring-blue-pro/30' : 'bg-white focus:ring-sage/30' }}
+                   class="w-full pl-11 pr-4 py-3 rounded-xl font-body text-sm
+                          {{ $isOwnerRole ? 'border-0 bg-slate-100 focus:ring-blue-pro/30' : 'border border-slate-200/70 bg-white focus:ring-sage/30 focus:border-sage' }}
                           focus:ring-2 focus:outline-none transition-all shadow-sm">
         </div>
 
@@ -79,7 +79,7 @@
             @foreach($daftarProduk as $produk)
                 <div wire:click="tambahKeKeranjang({{ $produk->id_produk }})"
                      class="bg-white rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:scale-[1.01] transition-all duration-200 group
-                            {{ $isOwnerRole ? 'hover:shadow-md border border-slate-100' : 'hover:shadow-md' }}">
+                            {{ $isOwnerRole ? 'hover:shadow-md border border-slate-100' : 'border border-slate-200/70 hover:border-sage/40 hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]' }}">
 
                     <div class="flex items-center justify-between">
                         <span class="font-label text-[10px] font-bold tracking-widest uppercase {{ $isOwnerRole ? 'text-slate-400' : 'text-sage/70' }}">{{ $produk->kode_barang ?? '—' }}</span>
@@ -145,9 +145,9 @@
     {{-- ============================== --}}
     {{-- RIGHT: CART SIDEBAR (30%)      --}}
     {{-- ============================== --}}
-    <section class="w-full md:w-[30%] h-full flex flex-col z-20 {{ $isOwnerRole ? 'bg-white border-l border-slate-200' : 'bg-[#F1F3F2] md:shadow-[-8px_0_30px_-8px_rgba(0,0,0,0.04)]' }}">
+    <section class="w-full md:w-[30%] md:h-full flex flex-col z-20 {{ $isOwnerRole ? 'bg-white md:border-l border-slate-200' : 'bg-[#F1F3F2] md:shadow-[-8px_0_30px_-8px_rgba(0,0,0,0.04)]' }}">
 
-        <div class="p-5 flex-1 flex flex-col overflow-hidden">
+        <div class="p-5 flex-1 flex flex-col md:overflow-hidden">
 
             <div class="flex items-center gap-2 mb-4">
                 <span class="material-symbols-outlined text-[22px] {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage' }}">shopping_bag</span>
@@ -252,13 +252,13 @@
 
             {{-- Empty State --}}
             @if(empty($keranjang))
-                <div class="flex-1 flex flex-col items-center justify-center text-center opacity-50">
+                <div class="md:flex-1 flex flex-col items-center justify-center text-center opacity-50 py-12 md:py-0">
                     <span class="material-symbols-outlined text-5xl text-slate-300 mb-3">receipt_long</span>
                     <p class="text-sm text-slate-400 font-semibold">Keranjang masih kosong</p>
                 </div>
             @else
                 {{-- Cart Items --}}
-                <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <div class="md:flex-1 md:overflow-y-auto space-y-3 pr-1">
                     @foreach($keranjang as $index => $item)
                         @php
                             $isPcs = in_array($item['satuan_utama'], ['pcs', 'biji', 'unit', 'buah']);
@@ -365,7 +365,7 @@
                 
                 <button wire:click="konfirmasiPembayaran"
                         {{ empty($keranjang) ? 'disabled' : '' }}
-                        class="w-full py-3.5 rounded-xl font-label uppercase tracking-wider text-sm font-bold text-white shadow-md hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-gradient-to-r from-sage-dark to-sage' }}">
+                        class="w-full py-3.5 rounded-xl font-label uppercase tracking-wider text-sm font-bold text-white shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-sage-dark hover:bg-sage' }}">
                     Review & Cetak Nota
                 </button>
             </div>

@@ -17,7 +17,7 @@
     @endif
 
     {{-- Card: Background POS --}}
-    <div class="bg-white rounded-2xl overflow-hidden mb-6 {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+    <div class="bg-white rounded-2xl overflow-hidden mb-6 border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
         <div class="px-6 py-4 border-b flex items-center gap-3 {{ $isOwnerRole ? 'bg-slate-50 border-slate-200' : 'bg-sage-light/50 border-sage/10' }}">
             <span class="material-symbols-outlined text-[22px] {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage' }}">wallpaper</span>
             <h3 class="font-headline text-lg font-bold {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }}">Background Halaman POS</h3>

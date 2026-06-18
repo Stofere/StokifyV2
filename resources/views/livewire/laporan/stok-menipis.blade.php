@@ -1,8 +1,9 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
+@php $isOwnerRole = Auth::user()->peran === 'OWNER'; @endphp
+<div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 fade-in">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
         <div>
-            <h2 class="text-2xl font-black text-gray-800">Laporan Stok Menipis & Habis</h2>
-            <p class="text-sm text-gray-500">Daftar produk yang membutuhkan restock segera berdasarkan batas minimum otomatis.</p>
+            <h2 class="font-headline text-2xl md:text-3xl font-bold {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }}">Laporan Stok Menipis & Habis</h2>
+            <p class="text-sm text-slate-400 mt-1">Daftar produk yang membutuhkan restock segera berdasarkan batas minimum otomatis.</p>
         </div>
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button wire:click="cetakPdf" wire:loading.attr="disabled" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold shadow transition flex items-center gap-2 shrink-0">
@@ -35,9 +36,10 @@
     </div>
 
     {{-- Data Table --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="w-full text-left text-sm border-collapse">
-            <thead class="bg-gray-800 text-white border-b border-gray-200 uppercase tracking-wider text-[11px]">
+            <thead class="bg-charcoal text-white uppercase tracking-wider text-[11px]">
                 <tr>
                     <th class="p-4 font-bold w-12 text-center">No</th>
                     <th class="p-4 font-bold w-32">Kode / SKU</th>
@@ -96,5 +98,6 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>

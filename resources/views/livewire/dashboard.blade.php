@@ -34,62 +34,61 @@
         }
     @endphp
 
-    {{-- Hero Section --}}
-    <div class="px-4 md:px-8 pt-6">
-        <div class="w-full bg-gradient-to-br from-[#E0F2F1] via-[#F1F5F9] to-[#F8F9FA] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden group">
+    {{-- Konten Admin --}}
+    <div class="px-4 md:px-8 pt-6 md:pt-8 space-y-6">
 
-            {{-- Anime Image Character --}}
-            <div id="frieren-chibi" class="relative w-40 h-40 md:w-64 md:h-64 shrink-0 frieren-float z-10 block order-last md:order-none cursor-pointer">
-                <img src="/images/chibi-frieren-open.png" alt="Frieren"
-                    class="absolute inset-0 w-full h-full object-contain frieren-wave transition-transform duration-500 group-hover:scale-105 frieren-eye-open">
-                <img src="/images/chibi-frieren-blink.png" alt="Frieren Blink"
-                    class="absolute inset-0 w-full h-full object-contain frieren-wave transition-transform duration-500 group-hover:scale-105 frieren-eye-closed opacity-0">
-            </div>
+        {{-- Hero Section --}}
+        <div class="relative overflow-hidden rounded-3xl border border-sage/15 bg-gradient-to-br from-sage-light/60 via-sage-bg to-white p-6 md:p-9">
 
-            {{-- Welcome Text --}}
-            <div class="flex-1 md:ml-8 text-center md:text-left z-10 mt-4 md:mt-0">
-                <h1 class="font-headline text-2xl md:text-3xl font-bold text-sage-dark tracking-tight flex items-center justify-center md:justify-start gap-2">
-                    🌿 Selamat {{ $greeting }}, {{ Auth::user()->name ?? 'Master' }}!
-                </h1>
-                <p class="text-slate-500 mt-3 text-sm leading-relaxed max-w-xl">
-                    {!! $mainText !!}<br>
-                    <span class="italic text-sage">{{ $frierenJoke }}</span>
-                </p>
-                <div class="mt-5">
-                    <a href="/pos" class="inline-flex items-center gap-2 bg-gradient-to-r from-sage-dark to-sage text-white font-bold py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 text-sm">
+            {{-- Decorative orbs --}}
+            <div class="pointer-events-none absolute -top-12 -right-12 w-44 h-44 bg-sage/10 rounded-full blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-16 right-24 w-36 h-36 bg-sage-light/50 rounded-full blur-2xl"></div>
+
+            <div class="relative flex flex-col md:flex-row items-center gap-6 md:gap-8 group">
+
+                {{-- Anime Image Character --}}
+                <div id="frieren-chibi" class="relative w-36 h-36 md:w-52 md:h-52 shrink-0 frieren-float order-last md:order-none cursor-pointer">
+                    <img src="/images/chibi-frieren-open.png" alt="Frieren"
+                        class="absolute inset-0 w-full h-full object-contain frieren-wave transition-transform duration-500 group-hover:scale-105 frieren-eye-open">
+                    <img src="/images/chibi-frieren-blink.png" alt="Frieren Blink"
+                        class="absolute inset-0 w-full h-full object-contain frieren-wave transition-transform duration-500 group-hover:scale-105 frieren-eye-closed opacity-0">
+                </div>
+
+                {{-- Welcome Text --}}
+                <div class="flex-1 text-center md:text-left">
+                    <p class="text-[11px] font-label font-bold uppercase tracking-[0.2em] text-sage">Dasbor Staff</p>
+                    <h1 class="mt-2 font-headline text-[1.9rem] md:text-4xl font-bold leading-tight text-sage-dark">
+                        Selamat {{ $greeting }}, {{ Auth::user()->name ?? 'Master' }}.
+                    </h1>
+                    <p class="mt-3 text-sm text-slate-500 leading-relaxed max-w-xl mx-auto md:mx-0">
+                        {!! $mainText !!}<br>
+                        <span class="italic text-sage">{{ $frierenJoke }}</span>
+                    </p>
+                    <a href="/pos" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-sage-dark px-5 py-3 text-sm font-semibold text-white transition hover:bg-sage focus:outline-none focus:ring-4 focus:ring-sage/20">
                         <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
                         Input Transaksi Baru
                     </a>
                 </div>
             </div>
-
-            {{-- Decorative orbs --}}
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-sage/10 rounded-full blur-2xl"></div>
-            <div class="absolute -bottom-10 right-20 w-32 h-32 bg-sage-light/40 rounded-full blur-xl"></div>
         </div>
-    </div>
-
-    {{-- Admin Content --}}
-    <div class="p-4 md:p-8 space-y-6">
 
         {{-- Bento Row 1: Metric + Activity --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
             {{-- Nota Count Card --}}
-            <a href="/transaksi/riwayat" class="bg-white rounded-2xl p-6 flex items-center gap-4 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gold rounded-r-full"></div>
-                <div class="bg-sage-light p-3.5 rounded-xl text-sage-dark group-hover:bg-sage group-hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <a href="/transaksi/riwayat" class="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 transition hover:border-sage/40 hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-sage-light text-sage-dark transition group-hover:bg-sage group-hover:text-white">
+                    <span class="material-symbols-outlined text-[26px]">receipt_long</span>
                 </div>
                 <div>
                     <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400">Total Nota Bulan Ini</p>
-                    <h3 class="font-headline text-3xl font-bold text-sage-dark mt-1">{{ $notaCount }}</h3>
+                    <h3 class="font-headline text-3xl font-bold text-sage-dark mt-0.5">{{ $notaCount }}</h3>
                     <p class="text-[10px] text-slate-400 mt-0.5 font-semibold">{{ $labelBulan }}</p>
                 </div>
             </a>
 
             {{-- Chart Preview Card --}}
-            <div class="md:col-span-2 bg-white rounded-2xl p-6" wire:ignore>
+            <div class="md:col-span-2 rounded-2xl border border-slate-200/70 bg-white p-6" wire:ignore>
                 <h4 class="font-label text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">Grafik Transaksi — {{ $labelBulan }}</h4>
                 <div class="w-full h-48">
                     <canvas id="salesChart"></canvas>
@@ -98,7 +97,7 @@
         </div>
 
         {{-- Bento Row 2: Activity Log --}}
-        <div class="bg-white rounded-2xl overflow-hidden">
+        <div class="rounded-2xl border border-slate-200/70 bg-white overflow-hidden">
             <h4 class="font-label text-[11px] font-bold uppercase tracking-widest text-slate-400 px-6 pt-5 pb-3">Log Aktivitas Sistem Hari Ini</h4>
             <div class="px-6 pb-5 max-h-[280px] overflow-y-auto">
                 @if(count($aktivitasHariIni) == 0)

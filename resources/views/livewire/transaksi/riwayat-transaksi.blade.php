@@ -29,7 +29,7 @@
     </div>
 
     {{-- Filters --}}
-    <div class="bg-white rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-end {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+    <div class="bg-white rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-end border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
         <div>
             <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dari Tgl</label>
             <input wire:model.live="tgl_mulai" type="date" class="border-0 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }}">
@@ -58,7 +58,7 @@
 
     {{-- TAB: POS --}}
     @if($activeTab === 'POS')
-        <div class="bg-white rounded-2xl overflow-hidden fade-in {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+        <div class="bg-white rounded-2xl overflow-hidden fade-in border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
@@ -110,7 +110,7 @@
 
     {{-- TAB: RETUR --}}
     @if($activeTab === 'RETUR')
-        <div class="bg-white rounded-2xl overflow-hidden fade-in {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+        <div class="bg-white rounded-2xl overflow-hidden fade-in border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
@@ -173,7 +173,7 @@
     {{-- ==================== MODAL INPUT KOREKSI QTY ==================== --}}
     @if($showKoreksiModal)
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 fade-in">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 {{ $isOwnerRole ? 'border-blue-pro' : 'border-sage-dark' }}">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto flex flex-col border-t-4 {{ $isOwnerRole ? 'border-blue-pro' : 'border-sage-dark' }}">
                 <div class="px-6 py-4 flex justify-between items-center shrink-0 {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
                     <h3 class="text-lg font-headline font-bold">Koreksi Jumlah Barang</h3>
                     <button wire:click="tutupKoreksi" class="text-white/70 hover:text-red-500 transition-colors">
@@ -234,7 +234,7 @@
             $selisihStokKg = ($koreksi_is_dual_unit ? (float)$koreksi_potong_baru : (float)$koreksi_qty_baru) - (float)$koreksi_potong_lama;
         @endphp
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 fade-in">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col border-t-4 {{ $selisihStokKg > 0 ? 'border-red-500' : 'border-emerald-500' }}">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[92vh] overflow-y-auto flex flex-col border-t-4 {{ $selisihStokKg > 0 ? 'border-red-500' : 'border-emerald-500' }}">
                 <div class="px-6 py-4 flex justify-between items-center shrink-0 {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
                     <h3 class="text-lg font-headline font-bold">Konfirmasi Koreksi</h3>
                     <button wire:click="$set('showKoreksiConfirmModal', false)" class="text-white/70 hover:text-red-500 transition-colors">

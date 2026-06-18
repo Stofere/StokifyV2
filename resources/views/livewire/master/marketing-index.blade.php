@@ -8,7 +8,7 @@
         </div>
         <button wire:click="$set('form_open', true)"
                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all
-                       {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-gradient-to-r from-sage-dark to-sage' }}">
+                       {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-sage-dark hover:bg-sage' }}">
             <span class="material-symbols-outlined text-[18px]">add</span> Tambah Marketing
         </button>
     </div>
@@ -70,7 +70,7 @@
         </div>{{-- /Modal Overlay --}}
     @endif
 
-    <div class="bg-white rounded-2xl overflow-hidden {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+    <div class="bg-white rounded-2xl overflow-hidden border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
         <div class="p-4 {{ $isOwnerRole ? 'bg-slate-50 border-b border-slate-200' : 'bg-[#F8F9FA] border-b border-sage/10' }}">
             <div class="relative w-full md:w-1/3">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>

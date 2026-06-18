@@ -1,13 +1,14 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
+@php $isOwnerRole = Auth::user()->peran === 'OWNER'; @endphp
+<div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 fade-in">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
         <div>
-            <h2 class="text-2xl font-black text-gray-800">Laporan Penjualan</h2>
-            <p class="text-sm text-gray-500">Lihat rekapitulasi penjualan harian, bulanan, atau tahunan.</p>
+            <h2 class="font-headline text-2xl md:text-3xl font-bold {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }}">Laporan Penjualan</h2>
+            <p class="text-sm text-slate-400 mt-1">Lihat rekapitulasi penjualan harian, bulanan, atau tahunan.</p>
         </div>
     </div>
 
     <!-- FILTER AREA -->
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-end">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 flex flex-wrap gap-4 items-end">
         <div>
             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipe Laporan</label>
             <select wire:model.live="tipe_filter" class="border-gray-300 rounded-lg p-2.5 text-sm font-bold bg-gray-50 focus:ring-blue-500">
@@ -55,7 +56,7 @@
      <!-- TAMPILAN KHUSUS HARIAN: TEXT BOX COPY-PASTE UNTUK BOS -->
     @if($tipe_filter === 'harian')
         <!-- x-data untuk mengelola state tombol Copy via Alpine.js -->
-        <div x-data="{ copied: false }" class="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl shadow-lg p-6">
+        <div x-data="{ copied: false }" class="rounded-2xl shadow-lg p-6 {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-900 to-indigo-900' : 'bg-gradient-to-r from-sage-dark to-sage' }}">
             
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                 <div class="flex items-center gap-3">
@@ -88,8 +89,9 @@
     @endif
 
     <!-- TABEL PREVIEW WEB (DENGAN TOMBOL BUKA MODAL) -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="bg-gray-50 p-4 border-b font-bold text-gray-700">Preview Data Penjualan di Website</div>
+    <div class="bg-white rounded-2xl border border-slate-200/70 overflow-hidden">
+        <div class="bg-slate-50 p-4 border-b border-slate-100 font-bold text-slate-600">Preview Data Penjualan di Website</div>
+        <div class="overflow-x-auto">
         <table class="w-full text-left text-sm border-collapse">
             <thead class="bg-white border-b-2 border-gray-100 text-gray-500 uppercase tracking-wider text-[11px]">
                 <tr>
@@ -103,7 +105,7 @@
             <tbody class="divide-y divide-gray-100">
                 @php $nomor = 1; @endphp
                 @forelse($daftarTransaksi as $trx)
-                    <tr class="hover:bg-blue-50">
+                    <tr class="{{ $isOwnerRole ? 'hover:bg-blue-50' : 'hover:bg-sage-light/20' }}">
                         <td class="p-4 text-center font-bold text-gray-400">{{ $nomor++ }}.</td>
                         <td class="p-4">
                             <p class="font-bold text-gray-800">{{ \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d/m/Y H:i') }}</p>
@@ -123,14 +125,14 @@
                             </div>
                         </td>
                         <td class="p-4">
-                            <p class="font-bold text-blue-700">{{ $trx->pelanggan->nama ?? 'Umum' }}</p>
+                            <p class="font-bold {{ $isOwnerRole ? 'text-blue-700' : 'text-sage-dark' }}">{{ $trx->pelanggan->nama ?? 'Umum' }}</p>
                             <p class="text-xs text-gray-500 mt-1">Sales: {{ $trx->marketing->nama ?? '-' }}</p>
                         </td>
                         <td class="p-4 text-right font-black text-green-700 text-base">
                             Rp {{ number_format($trx->total_harga, 0, ',', '.') }}
                         </td>
                         <td class="p-4 text-center">
-                            <button wire:click="lihatDetail({{ $trx->id_transaksi_penjualan }})" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg font-bold text-xs transition-colors shadow-sm">
+                            <button wire:click="lihatDetail({{ $trx->id_transaksi_penjualan }})" class="px-3 py-1.5 rounded-lg font-bold text-xs transition-colors shadow-sm {{ $isOwnerRole ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white' : 'bg-sage-light text-sage-dark hover:bg-sage hover:text-white' }}">
                                 Lihat Rincian
                             </button>
                         </td>
@@ -140,6 +142,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <!-- ==================================================================== -->

@@ -11,7 +11,7 @@
         @if(!$form_open && !$stok_modal_open && !$modal_detail_nota_open)
             <button wire:click="$set('form_open', true)"
                     class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all
-                           {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-gradient-to-r from-sage-dark to-sage' }}">
+                           {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-sage-dark hover:bg-sage' }}">
                 <span class="material-symbols-outlined text-[18px]">add</span>
                 Tambah Barang Baru
             </button>
@@ -278,7 +278,7 @@
     {{-- ================================================================ --}}
     {{-- TABEL DATA BARANG                                                --}}
     {{-- ================================================================ --}}
-    <div x-data="{ showHargaGlobal: false }" class="bg-white rounded-2xl overflow-hidden {{ ($stok_modal_open || $modal_detail_nota_open) ? 'hidden' : '' }} {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+    <div x-data="{ showHargaGlobal: false }" class="bg-white rounded-2xl overflow-hidden {{ ($stok_modal_open || $modal_detail_nota_open) ? 'hidden' : '' }} border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
         {{-- Toolbar --}}
         <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-3 {{ $isOwnerRole ? 'bg-slate-50 border-b border-slate-200' : 'bg-[#F8F9FA] border-b border-sage/10' }}">
             <div class="relative w-full sm:w-1/2">

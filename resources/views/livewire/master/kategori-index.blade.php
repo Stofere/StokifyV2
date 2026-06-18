@@ -8,7 +8,7 @@
         </div>
         <button wire:click="$set('form_open', true)"
                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all
-                       {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-gradient-to-r from-sage-dark to-sage' }}">
+                       {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-sage-dark hover:bg-sage' }}">
             <span class="material-symbols-outlined text-[18px]">add</span> Tambah Kategori
         </button>
     </div>
@@ -20,7 +20,7 @@
     @endif
 
     @if($form_open)
-        <div class="bg-white rounded-2xl overflow-hidden mb-6 {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+        <div class="bg-white rounded-2xl overflow-hidden mb-6 border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
             <div class="px-6 py-4 border-b flex justify-between items-center {{ $isOwnerRole ? 'bg-slate-50 border-slate-200' : 'bg-sage-light/50 border-sage/10' }}">
                 <h3 class="font-headline text-lg font-bold {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }}">{{ $edit_id ? 'Edit Kategori' : 'Buat Kategori Baru' }}</h3>
                 <button wire:click="resetForm" class="text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined">close</span></button>
@@ -63,7 +63,7 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-2xl overflow-hidden {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
+    <div class="bg-white rounded-2xl overflow-hidden border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
