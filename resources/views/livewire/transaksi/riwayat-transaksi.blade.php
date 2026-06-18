@@ -48,6 +48,14 @@
         </div>
     </div>
 
+    {{-- Flash Notifikasi --}}
+    @if(session()->has('sukses'))
+        <div class="bg-emerald-50 text-emerald-700 border border-emerald-200 p-3 mb-5 rounded-xl text-sm font-semibold">{{ session('sukses') }}</div>
+    @endif
+    @if(session()->has('error'))
+        <div class="bg-red-50 text-red-700 border border-red-200 p-3 mb-5 rounded-xl text-sm font-semibold">{{ session('error') }}</div>
+    @endif
+
     {{-- TAB: POS --}}
     @if($activeTab === 'POS')
         <div class="bg-white rounded-2xl overflow-hidden fade-in {{ $isOwnerRole ? 'border border-slate-200' : '' }}">
@@ -64,10 +72,18 @@
                                 <td class="p-4">
                                     <p class="font-headline font-bold mt-0.5 {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">{{ $pos->tanggal_transaksi->format('d/m/Y H:i') }}</p>
                                     <p class="text-[10px] text-slate-400 font-semibold">{{ $pos->kode_nota }}</p>
-                                    {{-- FIX: Tampilkan penanda HANYA jika ada status DIRETUR --}}
-                                    @if($pos->status_penjualan === 'DIRETUR')
-                                        <span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase mt-1 inline-block border border-orange-200">⚠️ Ada Retur</span>
-                                    @endif
+                                    <div class="flex flex-wrap gap-1 mt-1">
+                                        @if($pos->status_penjualan === 'DIRETUR')
+                                            <span class="inline-flex items-center gap-0.5 bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-orange-200">
+                                                <span class="material-symbols-outlined text-[12px]">undo</span> Ada Retur
+                                            </span>
+                                        @endif
+                                        @if($pos->riwayat_koreksi_count > 0)
+                                            <span class="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-amber-200">
+                                                <span class="material-symbols-outlined text-[12px]">edit_note</span> Dikoreksi
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="p-4">
                                     <p class="font-semibold text-slate-700">{{ $pos->pelanggan->nama ?? 'Walk-in (Umum)' }}</p>
@@ -143,164 +159,138 @@
         </div>
     @endif
 
-    {{-- MODAL DETAIL --}}
+    {{-- MODAL DETAIL NOTA (komponen bersama) --}}
     @if($modal_open && $detail_nota)
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-            <div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+        <x-nota-detail-modal
+            :nota="$detail_nota"
+            :tipe="$activeTab"
+            :owner="$isOwnerRole"
+            close-action="tutupModal"
+            koreksi-action="bukaKoreksi"
+            retur-link-action="lihatDetail" />
+    @endif
+
+    {{-- ==================== MODAL INPUT KOREKSI QTY ==================== --}}
+    @if($showKoreksiModal)
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 fade-in">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 {{ $isOwnerRole ? 'border-blue-pro' : 'border-sage-dark' }}">
                 <div class="px-6 py-4 flex justify-between items-center shrink-0 {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
-                    <div>
-                        <h3 class="font-headline text-lg font-bold">
-                            @if($activeTab == 'POS') Detail Nota Penjualan @else Detail Nota Retur @endif
-                        </h3>
-                        <p class="text-sm opacity-80 mt-0.5">Kode: {{ $detail_nota->kode_nota ?? $detail_nota->kode_retur }}</p>
-                    </div>
-                    <button wire:click="tutupModal" class="px-4 py-2 rounded-lg font-bold text-sm bg-white/10 hover:bg-red-500 transition-colors">× Tutup</button>
+                    <h3 class="text-lg font-headline font-bold">Koreksi Jumlah Barang</h3>
+                    <button wire:click="tutupKoreksi" class="text-white/70 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
                 </div>
 
-                <div class="p-6 overflow-y-auto flex-1">
-                    @if($activeTab == 'POS')
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Waktu</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $detail_nota->tanggal_transaksi->format('d M Y, H:i') }}</p></div>
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Kasir</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $detail_nota->user->name ?? '-' }}</p></div>
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pelanggan</p><p class="font-semibold text-sm {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }} mt-1">{{ $detail_nota->pelanggan->nama ?? 'Umum' }}</p></div>
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Marketing</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $detail_nota->marketing->nama ?? '-' }}</p></div>
-                        </div>
-                        <h4 class="font-semibold text-sm text-slate-700 mb-2 border-b pb-2 border-slate-100">Daftar Barang</h4>
-                        <table class="w-full text-left text-sm">
-                            <thead><tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100"><th class="p-3">Barang</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Harga</th><th class="p-3 text-right">Subtotal</th></tr></thead>
-                            <tbody class="divide-y">
-                                @foreach($detail_nota->detailPenjualan as $det)
-                                    <tr>
-                                        <td class="p-3">
-                                            <span class="font-bold text-gray-800 block">{{ $det->produk->nama_produk }}</span>
-                                            
-                                            {{-- FIX: JEJAK MULTI-RETUR (Mencari semua retur untuk barang ini) --}}
-                                            @if($det->jumlah_diretur > 0)
-                                                @php
-                                                    $daftarJejakRetur = [];
-                                                    foreach($detail_nota->transaksiRetur as $retur) {
-                                                        foreach($retur->detailRetur as $dRet) {
-                                                            if($dRet->id_produk_dikembalikan === $det->id_produk) {
-                                                                // Simpan data retur beserta sampul notanya untuk diambil catatannya
-                                                                $daftarJejakRetur[] = [
-                                                                    'detail' => $dRet,
-                                                                    'nota_retur' => $retur
-                                                                ];
-                                                            }
-                                                        }
-                                                    }
-                                                @endphp
-
-                                                @forelse($daftarJejakRetur as $jejak)
-                                                    <div class="mt-2 bg-orange-50 border border-orange-200 rounded p-3 text-xs shadow-sm relative">
-                                                        <span class="text-orange-700 font-black block mb-1 uppercase tracking-wider text-[10px]">⚠️ Diretur: {{ $jejak['nota_retur']->tanggal_retur->format('d/m/Y H:i') }}</span>
-                                                        <span class="text-gray-700 block mb-1">Dikembalikan <strong class="text-red-600">{{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }}</strong> (Kondisi: {{ $jejak['detail']->kondisi_barang_dikembalikan }})</span>
-                                                        <span class="text-gray-700 block mb-1">Diganti dgn: <strong class="text-green-700">{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> ({{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }})</span>
-                                                        
-                                                        {{-- Catatan Retur --}}
-                                                        <span class="block bg-white p-1.5 rounded border border-orange-100 text-gray-600 italic mt-1.5">
-                                                            "{{ $jejak['nota_retur']->catatan ?? 'Tanpa catatan' }}"
-                                                        </span>
-                                                        
-                                                        <button wire:click="lihatDetail({{ $jejak['nota_retur']->id_retur }}, 'RETUR')" class="mt-2 bg-white border border-orange-300 text-orange-700 hover:bg-orange-100 px-3 py-1 rounded-full font-bold transition-colors w-max text-[10px]">
-                                                            Buka Dokumen Retur &rarr;
-                                                        </button>
-                                                    </div>
-                                                @empty
-                                                    {{-- Fallback jika data terputus di database --}}
-                                                    <span class="block text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold mt-1 w-max border border-red-200">Total Diretur: {{ fmod($det->jumlah_diretur, 1) == 0 ? (int)$det->jumlah_diretur : $det->jumlah_diretur }} qty</span>
-                                                @endforelse
-                                            @endif
-                                        </td>
-                                        <td class="p-3 text-center align-top pt-4">
-                                            <span class="font-bold text-gray-700">{{ fmod($det->jumlah, 1) == 0 ? (int)$det->jumlah : $det->jumlah }} {{ strtoupper($det->satuan_saat_jual) }}</span>
-                                            @if(strtolower($det->satuan_saat_jual) === 'meter' && $det->jumlah_potong_gudang)
-                                                <span class="block text-[9px] text-amber-600 font-bold mt-0.5">⚖️ {{ $det->jumlah_potong_gudang }} KG</span>
-                                            @endif
-                                        </td>
-                                        <td class="p-3 text-right text-gray-600 align-top pt-4">Rp {{ number_format($det->harga_satuan, 0, ',', '.') }}<span class="text-[9px] text-slate-400 block">/{{ $det->satuan_saat_jual }}</span></td>
-                                        <td class="p-3 text-right font-bold text-green-700 align-top pt-4">Rp {{ number_format($det->subtotal, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot><tr class="bg-slate-50"><td colspan="3" class="p-3 text-right font-bold text-slate-500 uppercase text-xs">Total:</td><td class="p-3 text-right font-headline font-bold text-lg text-emerald-600">Rp {{ number_format($detail_nota->total_harga, 0, ',', '.') }}</td></tr></tfoot>
-                        </table>
-                    @else
-                        {{-- ==================== DETAIL NOTA RETUR (REDESIGN LENGKAP) ==================== --}}
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Waktu Retur</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $detail_nota->tanggal_retur->format('d M Y, H:i') }}</p></div>
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Diproses Oleh</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $detail_nota->user->name ?? '-' }}</p></div>
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nota POS Asal</p><p class="font-semibold text-sm {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }} mt-1 cursor-pointer underline" wire:click="lihatDetail({{ $detail_nota->transaksiPenjualan->id_transaksi_penjualan }}, 'POS')">{{ $detail_nota->transaksiPenjualan->kode_nota ?? '-' }}</p></div>
-                            <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pelanggan</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $detail_nota->transaksiPenjualan->pelanggan->nama ?? 'Umum' }}</p></div>
-                        </div>
-
-                        {{-- Catatan Retur --}}
-                        <div class="mb-5 bg-amber-50 border border-amber-200 p-4 rounded-xl">
-                            <p class="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-1">📝 Catatan Retur</p>
-                            <p class="text-sm text-slate-700 italic font-medium">"{{ $detail_nota->catatan ?? 'Tidak ada catatan.' }}"</p>
-                        </div>
-
-                        <h4 class="font-semibold text-sm text-slate-700 mb-3 border-b pb-2 border-slate-100">Rincian Tukar Barang</h4>
-                        <div class="space-y-4">
-                            @foreach($detail_nota->detailRetur as $detRetur)
-                                @php
-                                    // Cari detail penjualan asli untuk mendapatkan satuan_saat_jual
-                                    $detailAsli = $detail_nota->transaksiPenjualan->detailPenjualan->firstWhere('id_produk', $detRetur->id_produk_dikembalikan);
-                                    $satuanAsli = $detailAsli ? strtoupper($detailAsli->satuan_saat_jual) : strtoupper($detRetur->produkDikembalikan->satuan);
-                                    $hargaAsli = $detailAsli ? $detailAsli->harga_satuan : 0;
-                                @endphp
-                                <div class="rounded-xl border border-slate-200 overflow-hidden">
-                                    {{-- Header item retur --}}
-                                    <div class="flex flex-col md:flex-row">
-                                        {{-- Barang dikembalikan --}}
-                                        <div class="flex-1 bg-red-50 p-4">
-                                            <p class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-2">❌ Dikembalikan</p>
-                                            <p class="font-bold text-red-700 text-sm">{{ $detRetur->produkDikembalikan->nama_produk }}</p>
-                                            <div class="mt-2 space-y-1 text-xs text-slate-600">
-                                                <p>Jumlah: <strong class="text-red-600">{{ fmod($detRetur->jumlah, 1) == 0 ? (int)$detRetur->jumlah : $detRetur->jumlah }} {{ $satuanAsli }}</strong></p>
-                                                <p>Harga Nota: <strong>Rp {{ number_format($hargaAsli, 0, ',', '.') }}</strong> /{{ $satuanAsli }}</p>
-                                                <p>Kondisi: <span class="font-bold px-1.5 py-0.5 rounded text-[10px] {{ $detRetur->kondisi_barang_dikembalikan === 'BAGUS' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">{{ $detRetur->kondisi_barang_dikembalikan }}</span></p>
-                                            </div>
-                                        </div>
-                                        {{-- Arrow --}}
-                                        <div class="flex items-center justify-center px-3 bg-slate-100">
-                                            <span class="material-symbols-outlined text-slate-400">arrow_forward</span>
-                                        </div>
-                                        {{-- Barang pengganti --}}
-                                        <div class="flex-1 bg-emerald-50 p-4">
-                                            <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mb-2">✅ Pengganti</p>
-                                            <p class="font-bold text-emerald-700 text-sm">{{ $detRetur->produkPengganti->nama_produk }}</p>
-                                            <div class="mt-2 space-y-1 text-xs text-slate-600">
-                                                <p>Jumlah: <strong class="text-emerald-600">{{ fmod($detRetur->jumlah, 1) == 0 ? (int)$detRetur->jumlah : $detRetur->jumlah }} {{ $satuanAsli }}</strong></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {{-- Selisih biaya per item --}}
-                                    @if($detRetur->subtotal_biaya != 0)
-                                        <div class="px-4 py-2 {{ $detRetur->subtotal_biaya > 0 ? 'bg-amber-50 border-t border-amber-200' : 'bg-emerald-50 border-t border-emerald-200' }} text-xs font-bold">
-                                            @if($detRetur->subtotal_biaya > 0)
-                                                <span class="text-amber-700">💰 Pelanggan Nambah: Rp {{ number_format(abs($detRetur->subtotal_biaya), 0, ',', '.') }}</span>
-                                            @else
-                                                <span class="text-emerald-700">💰 Toko Kembalikan: Rp {{ number_format(abs($detRetur->subtotal_biaya), 0, ',', '.') }}</span>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{-- Total Biaya Retur --}}
-                        <div class="mt-5 p-4 rounded-xl {{ $detail_nota->total_biaya_retur > 0 ? 'bg-amber-50 border-2 border-amber-200' : ($detail_nota->total_biaya_retur < 0 ? 'bg-emerald-50 border-2 border-emerald-200' : 'bg-slate-50 border-2 border-slate-200') }}">
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Selisih Biaya Retur</p>
-                            @if($detail_nota->total_biaya_retur > 0)
-                                <p class="font-headline text-xl font-bold text-amber-700">Pelanggan Nambah: Rp {{ number_format(abs($detail_nota->total_biaya_retur), 0, ',', '.') }}</p>
-                            @elseif($detail_nota->total_biaya_retur < 0)
-                                <p class="font-headline text-xl font-bold text-emerald-700">Toko Kembalikan: Rp {{ number_format(abs($detail_nota->total_biaya_retur), 0, ',', '.') }}</p>
-                            @else
-                                <p class="font-headline text-xl font-bold text-slate-600">Tukar Guling (Rp 0)</p>
+                <div class="p-6 bg-slate-50">
+                    <div class="bg-white border border-slate-200 rounded-xl p-4 mb-4">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Barang</p>
+                        <p class="font-bold text-slate-800 mt-0.5">{{ $koreksi_nama_produk }}</p>
+                        <p class="text-xs text-slate-500 mt-1">
+                            Qty saat ini yang ada di nota: <strong>{{ fmod($koreksi_qty_lama, 1) == 0 ? (int)$koreksi_qty_lama : $koreksi_qty_lama }} {{ strtoupper($koreksi_satuan) }}</strong>
+                            @if($koreksi_diretur > 0)
+                                <span class="text-orange-600">• Sudah diretur: {{ fmod($koreksi_diretur, 1) == 0 ? (int)$koreksi_diretur : $koreksi_diretur }}</span>
                             @endif
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Qty Baru ({{ strtoupper($koreksi_satuan) }}) <span class="text-red-500">*</span></label>
+                        <input type="number" step="any" min="0" wire:model="koreksi_qty_baru"
+                               class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }} text-sm font-semibold bg-white">
+                        @error('koreksi_qty_baru') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    @if($koreksi_is_dual_unit)
+                        <div class="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                            <label class="block text-[10px] font-bold text-amber-700 mb-1.5 uppercase tracking-widest">Berat Timbangan Baru (KG) <span class="text-red-500">*</span></label>
+                            <p class="text-[11px] text-amber-600 mb-2">Barang dijual per Meter — masukkan KG fisik yang benar (stok gudang disesuaikan dari KG ini). KG lama: {{ $koreksi_potong_lama + 0 }}.</p>
+                            <input type="number" step="any" min="0" wire:model="koreksi_potong_baru"
+                                   class="w-full border border-amber-200 rounded-lg p-3 focus:ring-2 focus:ring-amber-200 text-sm font-semibold bg-white">
+                            @error('koreksi_potong_baru') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     @endif
+
+                    <div class="mb-2">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Alasan Koreksi <span class="text-red-500">*</span></label>
+                        <textarea wire:model="koreksi_alasan" rows="2" placeholder="Contoh: Barang sampai ke pembeli hanya 5, sisa dikembalikan ke stok."
+                                  class="w-full border border-slate-200 rounded-lg p-3 focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }} text-sm bg-white"></textarea>
+                        @error('koreksi_alasan') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="bg-white px-6 py-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row gap-3 justify-end items-center">
+                    <button wire:click="tutupKoreksi" class="w-full sm:w-auto px-6 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Batal</button>
+                    <button wire:click="reviewKoreksi" class="w-full sm:w-auto px-8 py-2.5 text-white rounded-xl font-bold shadow-md transition-all active:scale-[0.98] {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
+                        Lanjut Konfirmasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ==================== MODAL KONFIRMASI + PASSWORD ==================== --}}
+    @if($showKoreksiConfirmModal)
+        @php
+            $selisihStokKg = ($koreksi_is_dual_unit ? (float)$koreksi_potong_baru : (float)$koreksi_qty_baru) - (float)$koreksi_potong_lama;
+        @endphp
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 fade-in">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col border-t-4 {{ $selisihStokKg > 0 ? 'border-red-500' : 'border-emerald-500' }}">
+                <div class="px-6 py-4 flex justify-between items-center shrink-0 {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
+                    <h3 class="text-lg font-headline font-bold">Konfirmasi Koreksi</h3>
+                    <button wire:click="$set('showKoreksiConfirmModal', false)" class="text-white/70 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6 bg-slate-50">
+                    <p class="text-center text-slate-600 mb-5 text-sm">Pastikan data di bawah benar. Stok sistem akan otomatis disesuaikan.</p>
+
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+                        <div class="flex justify-between border-b border-slate-100 pb-3">
+                            <span class="text-slate-500 font-bold text-sm">Barang:</span>
+                            <span class="font-bold text-slate-800 text-right">{{ $koreksi_nama_produk }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-3">
+                            <span class="text-slate-500 font-bold text-sm">Perubahan Qty:</span>
+                            <span class="font-bold text-slate-800 text-right">
+                                {{ fmod($koreksi_qty_lama, 1) == 0 ? (int)$koreksi_qty_lama : $koreksi_qty_lama }}
+                                &rarr;
+                                {{ fmod((float)$koreksi_qty_baru, 1) == 0 ? (int)$koreksi_qty_baru : $koreksi_qty_baru }}
+                                {{ strtoupper($koreksi_satuan) }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-3">
+                            <span class="text-slate-500 font-bold text-sm">Efek ke Stok Sistem:</span>
+                            @if($selisihStokKg > 0)
+                                <span class="font-bold text-red-600 bg-red-50 px-3 py-1 rounded">&minus; {{ abs($selisihStokKg) + 0 }} (stok berkurang)</span>
+                            @elseif($selisihStokKg < 0)
+                                <span class="font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded">+ {{ abs($selisihStokKg) + 0 }} (stok bertambah)</span>
+                            @else
+                                <span class="font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded">Tidak berubah</span>
+                            @endif
+                        </div>
+                        <div>
+                            <span class="text-slate-500 font-bold text-sm block mb-1">Alasan Koreksi:</span>
+                            <p class="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 italic text-sm">"{{ $koreksi_alasan }}"</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 bg-red-50 border border-red-200 rounded-xl p-5 shadow-sm">
+                        <label class="block text-[10px] font-bold text-red-700 mb-1.5 uppercase tracking-widest">Otorisasi Keamanan (Wajib)</label>
+                        <p class="text-xs text-red-600 mb-3 font-medium">Tindakan ini tercatat permanen di SISTEM. Masukkan password akun Anda.</p>
+                        <input type="password" wire:model="password_admin" placeholder="Masukkan Password Akun Anda..."
+                               class="w-full border border-red-200 rounded-lg p-3 focus:ring-2 focus:ring-red-200 text-sm font-semibold bg-white shadow-inner">
+                        @error('password_admin') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="bg-white px-6 py-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row gap-3 justify-end items-center">
+                    <button wire:click="$set('showKoreksiConfirmModal', false)" class="w-full sm:w-auto px-6 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Kembali</button>
+                    <button wire:click="prosesKoreksi" wire:loading.attr="disabled"
+                            class="w-full sm:w-auto px-8 py-2.5 text-white rounded-xl font-bold shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
+                        <span wire:loading.remove wire:target="prosesKoreksi">Eksekusi Koreksi</span>
+                        <span wire:loading wire:target="prosesKoreksi">Memproses...</span>
+                    </button>
                 </div>
             </div>
         </div>

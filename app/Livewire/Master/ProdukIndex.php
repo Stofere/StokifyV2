@@ -385,11 +385,13 @@ class ProdukIndex extends Component
         
         if ($tipe === 'POS') {
             $this->detail_nota_aktif = TransaksiPenjualan::with([
-                'detailPenjualan.produk', 
-                'user', 
-                'pelanggan', 
+                'detailPenjualan.produk',
+                'user',
+                'pelanggan',
                 'marketing',
-                'transaksiRetur.detailRetur.produkPengganti' 
+                'transaksiRetur.detailRetur.produkPengganti',
+                'riwayatKoreksi.produk',
+                'riwayatKoreksi.user',
             ])->find($id_transaksi);
         } elseif ($tipe === 'RETUR') {
             $this->detail_nota_aktif = TransaksiRetur::with([

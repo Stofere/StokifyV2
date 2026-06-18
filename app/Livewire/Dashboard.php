@@ -59,6 +59,7 @@ class Dashboard extends Component
         $this->expandedTransaksiDetail = [];
 
         $this->marketingDrilldownData = TransaksiPenjualan::with('pelanggan')
+            ->withCount('riwayatKoreksi')
             ->where('id_marketing', $marketingId)
             ->whereBetween('tanggal_transaksi', [Carbon::parse($this->startDate)->startOfDay(), Carbon::parse($this->endDate)->endOfDay()])
             ->where('status_penjualan', '!=', 'DIBATALKAN')

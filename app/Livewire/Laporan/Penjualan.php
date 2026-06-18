@@ -31,6 +31,7 @@ class Penjualan extends Component
     private function getQuery()
     {
         $query = TransaksiPenjualan::with(['detailPenjualan.produk', 'pelanggan', 'marketing'])
+                    ->withCount('riwayatKoreksi')
                     ->where('status_penjualan', '!=', 'DIBATALKAN');
 
         if ($this->tipe_filter === 'harian') {
@@ -54,11 +55,13 @@ class Penjualan extends Component
     public function lihatDetail($id)
     {
         $this->detail_nota = TransaksiPenjualan::with([
-            'detailPenjualan.produk', 
-            'user', 
-            'pelanggan', 
+            'detailPenjualan.produk',
+            'user',
+            'pelanggan',
             'marketing',
-            'transaksiRetur.detailRetur.produkPengganti' // Menarik relasi jejak retur (smart trace)
+            'transaksiRetur.detailRetur.produkPengganti', // Menarik relasi jejak retur (smart trace)
+            'riwayatKoreksi.produk',
+            'riwayatKoreksi.user',
         ])->find($id);
         
         $this->modal_open = true;

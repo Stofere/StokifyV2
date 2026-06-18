@@ -51,4 +51,9 @@ class TransaksiPenjualan extends Model
     {
         return $this->hasMany(TransaksiRetur::class, 'id_transaksi_penjualan', 'id_transaksi_penjualan');
     }
+
+    public function riwayatKoreksi(): HasMany
+    {
+        return $this->hasMany(RiwayatKoreksiNota::class, 'id_transaksi_penjualan', 'id_transaksi_penjualan');
+    }
 }

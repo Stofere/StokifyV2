@@ -456,7 +456,14 @@
                             @forelse($marketingDrilldownData as $trx)
                                 <tr class="hover:bg-slate-50/50 transition-colors {{ $expandedTransaksiId == $trx->id_transaksi_penjualan ? 'bg-blue-50/50' : '' }}">
                                     <td class="px-3 py-2.5 font-semibold text-charcoal whitespace-nowrap">{{ $trx->tanggal_transaksi->translatedFormat('d M Y') }}</td>
-                                    <td class="px-3 py-2.5 font-mono text-xs text-slate-600 uppercase tracking-wider">{{ $trx->kode_nota }}</td>
+                                    <td class="px-3 py-2.5 font-mono text-xs text-slate-600 uppercase tracking-wider">
+                                        {{ $trx->kode_nota }}
+                                        @if($trx->riwayat_koreksi_count > 0)
+                                            <span class="inline-flex items-center gap-0.5 ml-1 bg-amber-50 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border border-amber-200 align-middle">
+                                                <span class="material-symbols-outlined text-[11px]">edit_note</span> Dikoreksi
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-3 py-2.5 text-slate-700">{{ $trx->pelanggan->nama ?? 'Walk-in' }}</td>
                                     @if($isOwner)
                                         <td class="px-3 py-2.5 text-right font-bold text-emerald-600">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>

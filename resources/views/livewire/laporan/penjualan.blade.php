@@ -109,14 +109,22 @@
                             <p class="font-bold text-gray-800">{{ \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d/m/Y H:i') }}</p>
                             <p class="text-[10px] text-gray-400 font-mono mt-1">{{ $trx->kode_nota }}</p>
                             
-                            {{--Tampilkan penanda HANYA jika ada status DIRETUR --}}
-                            @if($trx->status_penjualan === 'DIRETUR')
-                                <span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase mt-1 inline-block border border-orange-200">⚠️ Ada Retur</span>
-                            @endif
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                @if($trx->status_penjualan === 'DIRETUR')
+                                    <span class="inline-flex items-center gap-0.5 bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-orange-200">
+                                        <span class="material-symbols-outlined text-[12px]">undo</span> Ada Retur
+                                    </span>
+                                @endif
+                                @if($trx->riwayat_koreksi_count > 0)
+                                    <span class="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-amber-200">
+                                        <span class="material-symbols-outlined text-[12px]">edit_note</span> Dikoreksi
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td class="p-4">
-                            <p class="font-bold text-blue-700">👤 {{ $trx->pelanggan->nama ?? 'Umum' }}</p>
-                            <p class="text-xs text-gray-500 mt-1">👔 {{ $trx->marketing->nama ?? '-' }}</p>
+                            <p class="font-bold text-blue-700">{{ $trx->pelanggan->nama ?? 'Umum' }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Sales: {{ $trx->marketing->nama ?? '-' }}</p>
                         </td>
                         <td class="p-4 text-right font-black text-green-700 text-base">
                             Rp {{ number_format($trx->total_harga, 0, ',', '.') }}
@@ -138,79 +146,10 @@
     <!-- MODAL POP-UP BACA DETAIL NOTA (SAMA DENGAN RIWAYAT TRANSAKSI) -->
     <!-- ==================================================================== -->
     @if($modal_open && $detail_nota)
-        <div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-                
-                <div class="bg-gray-800 text-white px-6 py-4 flex justify-between items-center shrink-0">
-                    <div>
-                        <h3 class="text-xl font-bold flex items-center gap-2">🛒 Detail Nota Penjualan</h3>
-                        <p class="text-gray-300 text-sm mt-1">Kode: <span class="font-bold text-white">{{ $detail_nota->kode_nota }}</span></p>
-                    </div>
-                    <button wire:click="tutupModal" class="bg-gray-700 hover:bg-red-600 text-white px-4 py-2 rounded font-bold transition">&times; TUTUP</button>
-                </div>
-
-                <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <div><p class="text-[10px] font-bold text-gray-500 uppercase">Waktu Transaksi</p><p class="font-bold text-gray-800">{{ $detail_nota->tanggal_transaksi->format('d M Y, H:i') }}</p></div>
-                        <div><p class="text-[10px] font-bold text-gray-500 uppercase">Kasir</p><p class="font-bold text-gray-800">{{ $detail_nota->user->name ?? '-' }}</p></div>
-                        <div><p class="text-[10px] font-bold text-gray-500 uppercase">Pelanggan</p><p class="font-bold text-blue-700">{{ $detail_nota->pelanggan->nama ?? 'Walk-in (Umum)' }}</p></div>
-                        <div><p class="text-[10px] font-bold text-gray-500 uppercase">Marketing</p><p class="font-bold text-gray-800">{{ $detail_nota->marketing->nama ?? '-' }}</p></div>
-                    </div>
-
-                    <h4 class="font-bold text-gray-800 mb-2 border-b pb-2">Daftar Barang Terjual</h4>
-                    <table class="w-full text-left text-sm bg-white border rounded shadow-sm">
-                        <thead class="bg-gray-100 text-gray-600"><tr><th class="p-3">Nama Barang</th><th class="p-3 text-center">Beli</th><th class="p-3 text-right">Harga Satuan</th><th class="p-3 text-right">Subtotal</th></tr></thead>
-                        <tbody class="divide-y">
-                            @foreach($detail_nota->detailPenjualan as $det)
-                                <tr>
-                                    <td class="p-3">
-                                        <span class="font-bold text-gray-800 block">{{ $det->produk->nama_produk }}</span>
-                                        
-                                        {{-- FIX: JEJAK MULTI-RETUR DI LAPORAN PENJUALAN --}}
-                                        @if($det->jumlah_diretur > 0)
-                                            @php
-                                                $daftarJejakRetur = [];
-                                                foreach($detail_nota->transaksiRetur as $retur) {
-                                                    foreach($retur->detailRetur as $dRet) {
-                                                        if($dRet->id_produk_dikembalikan === $det->id_produk) {
-                                                            $daftarJejakRetur[] = ['detail' => $dRet, 'nota_retur' => $retur];
-                                                        }
-                                                    }
-                                                }
-                                            @endphp
-
-                                            @forelse($daftarJejakRetur as $jejak)
-                                                <div class="mt-2 bg-orange-50 border border-orange-200 rounded p-3 text-xs shadow-sm relative">
-                                                    <span class="text-orange-700 font-black block mb-1 uppercase tracking-wider text-[10px]">⚠️ Diretur: {{ $jejak['nota_retur']->tanggal_retur->format('d/m/Y H:i') }}</span>
-                                                    <span class="text-gray-700 block mb-1">Dikembalikan <strong class="text-red-600">{{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }}</strong> (Kondisi: {{ $jejak['detail']->kondisi_barang_dikembalikan }})</span>
-                                                    <span class="text-gray-700 block mb-1">Diganti dgn: <strong class="text-green-700">{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> ({{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }})</span>
-                                                    
-                                                    <span class="block bg-white p-1.5 rounded border border-orange-100 text-gray-600 italic mt-1.5">
-                                                        "{{ $jejak['nota_retur']->catatan ?? 'Tanpa catatan' }}"
-                                                    </span>
-                                                </div>
-                                            @empty
-                                                <span class="block text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold mt-1 w-max border border-red-200">Total Diretur: {{ fmod($det->jumlah_diretur, 1) == 0 ? (int)$det->jumlah_diretur : $det->jumlah_diretur }} qty</span>
-                                            @endforelse
-                                        @endif
-                                    </td>
-                                    <td class="p-3 text-center align-top pt-4">
-                                        {{ fmod($det->jumlah, 1) == 0 ? (int)$det->jumlah : $det->jumlah }} {{ strtoupper($det->satuan_saat_jual) }}
-                                        @if(strtolower($det->satuan_saat_jual) === 'meter' && $det->jumlah_potong_gudang)
-                                            <span class="block text-[9px] text-amber-600 font-bold mt-0.5">⚖️ {{ $det->jumlah_potong_gudang }} KG</span>
-                                        @endif
-                                    </td>
-                                    <td class="p-3 text-right text-gray-600 align-top pt-4">Rp {{ number_format($det->harga_satuan, 0, ',', '.') }}<span class="text-[9px] text-gray-400 block">/{{ $det->satuan_saat_jual }}</span></td>
-                                    <td class="p-3 text-right font-bold text-green-700 align-top pt-4">Rp {{ number_format($det->subtotal, 0, ',', '.') }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="bg-gray-50">
-                            <tr><td colspan="3" class="p-3 text-right font-bold uppercase text-gray-600">Total Harga:</td><td class="p-3 text-right font-black text-xl text-green-700">Rp {{ number_format($detail_nota->total_harga, 0, ',', '.') }}</td></tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <x-nota-detail-modal
+            :nota="$detail_nota"
+            tipe="POS"
+            :owner="false"
+            close-action="tutupModal" />
     @endif
 </div>
