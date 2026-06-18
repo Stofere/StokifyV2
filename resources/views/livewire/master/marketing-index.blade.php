@@ -8,7 +8,7 @@
         </div>
         <button wire:click="$set('form_open', true)"
                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all
-                       {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-sage-dark hover:bg-sage' }}">
+                       {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
             <span class="material-symbols-outlined text-[18px]">add</span> Tambah Marketing
         </button>
     </div>

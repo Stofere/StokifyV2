@@ -365,7 +365,7 @@
                 
                 <button wire:click="konfirmasiPembayaran"
                         {{ empty($keranjang) ? 'disabled' : '' }}
-                        class="w-full py-3.5 rounded-xl font-label uppercase tracking-wider text-sm font-bold text-white shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-pro to-blue-600' : 'bg-sage-dark hover:bg-sage' }}">
+                        class="w-full py-3.5 rounded-xl font-label uppercase tracking-wider text-sm font-bold text-white shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
                     Review & Cetak Nota
                 </button>
             </div>
