@@ -196,6 +196,62 @@
                                 </div>
                             @endif
                         </div>
+
+                        {{-- Foto Produk (Rak Foto Digital) — opsional, hanya untuk Katalog --}}
+                        @php
+                            $maksFoto = \App\Livewire\Master\ProdukIndex::MAKS_FOTO;
+                            $sisaSlot = $maksFoto - count($daftarFotoExisting);
+                        @endphp
+                        <div class="space-y-4 relative bg-emerald-50 p-5 rounded-xl border border-emerald-100">
+                            <div class="border-b border-emerald-200 pb-2">
+                                <h4 class="font-bold text-emerald-800">📷 Foto Produk <span class="text-xs font-normal text-emerald-600">(Opsional · maks {{ $maksFoto }} foto)</span></h4>
+                                <p class="text-[11px] text-emerald-700/80 mt-1">Foto hanya muncul di <b>Katalog</b> (untuk dilihat & di-download saat pembeli minta) — tidak tampil di kasir.</p>
+                            </div>
+
+                            {{-- Foto tersimpan (mode edit) --}}
+                            @if(!empty($daftarFotoExisting))
+                                <div class="flex flex-wrap gap-3">
+                                    @foreach($daftarFotoExisting as $foto)
+                                        <div class="relative w-24 h-24 rounded-lg overflow-hidden border border-emerald-200 bg-white shadow-sm">
+                                            <img src="{{ $foto['url_thumbnail'] }}" alt="{{ $foto['nama_asli'] }}" loading="lazy" class="w-full h-full object-cover">
+                                            <button type="button" wire:click="hapusFoto({{ $foto['id_gambar'] }})"
+                                                wire:confirm="Hapus foto ini? File akan dihapus permanen."
+                                                class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow">✕</button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- Upload foto baru --}}
+                            @if($sisaSlot > 0)
+                                <div x-data="{ previews: [], onPick(e){ this.previews = Array.from(e.target.files || []).map(f => URL.createObjectURL(f)); } }">
+                                    <label class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-emerald-300 rounded-xl p-4 cursor-pointer hover:bg-emerald-100/50 transition">
+                                        <input type="file" wire:model="foto_baru" accept="image/jpeg,image/png,image/webp" multiple class="hidden" x-on:change="onPick($event)">
+                                        <span class="text-sm font-semibold text-emerald-700">Klik untuk pilih foto (bisa {{ $sisaSlot }} lagi)</span>
+                                        <span class="text-[10px] text-emerald-600/70">JPG / PNG / WEBP · maks 15MB per foto</span>
+                                    </label>
+
+                                    <div wire:loading wire:target="foto_baru" class="text-xs text-emerald-700 mt-2 font-semibold">Mengunggah foto…</div>
+
+                                    {{-- Preview lokal sebelum disimpan --}}
+                                    <template x-if="previews.length">
+                                        <div class="flex flex-wrap gap-3 mt-3">
+                                            <template x-for="(src, i) in previews" :key="i">
+                                                <img :src="src" class="w-24 h-24 object-cover rounded-lg border border-emerald-200 shadow-sm">
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    @error('foto_baru.*') <p class="text-xs text-red-600 mt-2 font-semibold">{{ $message }}</p> @enderror
+                                </div>
+                            @else
+                                <p class="text-xs text-emerald-700 font-semibold">Sudah mencapai batas {{ $maksFoto }} foto. Hapus salah satu untuk menambah.</p>
+                            @endif
+
+                            @if(!$edit_id)
+                                <p class="text-[11px] text-slate-500 italic">Catatan: untuk produk baru, foto tersimpan setelah klik <b>Simpan</b>.</p>
+                            @endif
+                        </div>
                     </div>
 
                 @endif
@@ -271,6 +327,17 @@
                                         @endif
                                     @endforeach
                                 </div>
+                            @endif
+
+                            {{-- Galeri foto produk (klik untuk lihat & download) --}}
+                            @if($prod->gambar->isNotEmpty())
+                                <button type="button"
+                                    x-on:click="$dispatch('buka-lightbox', { images: @js($prod->gambar->map(fn($g) => ['url' => $g->url, 'nama' => $g->nama_asli, 'download' => route('produk.foto.download', $g->id_gambar)])->values()) })"
+                                    class="mt-2.5 inline-flex items-center gap-2 group">
+                                    <img src="{{ $prod->gambar->first()->url_thumbnail }}" loading="lazy" alt="Foto {{ $prod->nama_produk }}"
+                                        class="w-11 h-11 rounded-lg object-cover border border-slate-200 group-hover:ring-2 group-hover:ring-emerald-400 transition">
+                                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">📷 {{ $prod->gambar->count() }} foto · lihat</span>
+                                </button>
                             @endif
                         </td>
                         <td class="p-4 text-right">
@@ -792,9 +859,55 @@
         </div>
     </div>
 
+    {{-- ================================================================ --}}
+    {{-- LIGHTBOX GALERI FOTO PRODUK (lihat & download)                   --}}
+    {{-- Ringan tanpa library: foto besar baru dimuat saat popup dibuka.  --}}
+    {{-- ================================================================ --}}
+    <div x-data="{
+            open: false,
+            images: [],
+            index: 0,
+            bukaModal(imgs) { this.images = imgs || []; this.index = 0; this.open = true; document.body.style.overflow = 'hidden'; },
+            tutup() { this.open = false; document.body.style.overflow = ''; },
+            next() { if (this.images.length) this.index = (this.index + 1) % this.images.length; },
+            prev() { if (this.images.length) this.index = (this.index - 1 + this.images.length) % this.images.length; }
+         }"
+         x-on:buka-lightbox.window="bukaModal($event.detail.images)"
+         x-on:keydown.window="if (open) { if ($event.key === 'ArrowRight') next(); if ($event.key === 'ArrowLeft') prev(); if ($event.key === 'Escape') tutup(); }"
+         x-cloak>
+        <template x-if="open">
+            <div class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                 x-on:click.self="tutup()">
+
+                <button type="button" x-on:click="tutup()"
+                    class="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl">✕</button>
+
+                <button type="button" x-show="images.length > 1" x-on:click="prev()"
+                    class="absolute left-4 md:left-8 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-12 h-12 rounded-full flex items-center justify-center text-2xl">‹</button>
+
+                <div class="flex flex-col items-center gap-4 max-w-5xl w-full">
+                    <img :src="images[index]?.url" :alt="images[index]?.nama" loading="lazy"
+                        class="max-h-[78vh] max-w-full object-contain rounded-lg shadow-2xl bg-white">
+
+                    <div class="flex items-center gap-4">
+                        <span class="text-white/70 text-xs font-semibold" x-show="images.length > 1"
+                            x-text="(index + 1) + ' / ' + images.length"></span>
+                        <a :href="images[index]?.download"
+                            class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow transition">
+                            ⬇ Download Foto
+                        </a>
+                    </div>
+                </div>
+
+                <button type="button" x-show="images.length > 1" x-on:click="next()"
+                    class="absolute right-4 md:right-8 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-12 h-12 rounded-full flex items-center justify-center text-2xl">›</button>
+            </div>
+        </template>
+    </div>
+
     <script>
         // Prevent scroll from changing number input values
-        // when user scrolls the page while input is focused 
+        // when user scrolls the page while input is focused
         document.addEventListener('wheel', function (e) {
             if (document.activeElement.type === 'number') {
                 document.activeElement.blur();

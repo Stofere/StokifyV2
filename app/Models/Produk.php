@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Produk extends Model
 {
     protected $table = 'produk';
+
     protected $primaryKey = 'id_produk';
 
     protected $fillable = [
@@ -43,14 +44,14 @@ class Produk extends Model
             get: function (mixed $value, array $attributes) {
                 $stok = $attributes['stok_saat_ini'];
                 $satuan = strtolower($attributes['satuan'] ?? '');
-                
+
                 // Jika satuannya PCS, buang desimalnya jadi integer
                 if (in_array($satuan, ['pcs', 'unit', 'buah', 'biji'])) {
                     return (int) $stok;
                 }
-                
+
                 // Jika meter/kg, biarkan desimal (Hapus angka 0 di belakang jika tidak perlu)
-                return (float) $stok; 
+                return (float) $stok;
             }
         );
     }
@@ -70,7 +71,7 @@ class Produk extends Model
     // Accessor: Status stok otomatis (UNLIMITED, HABIS, MENIPIS, AMAN)
     public function getStatusStokAttribute(): string
     {
-        if (!$this->lacak_stok) {
+        if (! $this->lacak_stok) {
             return 'UNLIMITED';
         }
 
@@ -93,5 +94,11 @@ class Produk extends Model
     public function riwayatStok(): HasMany
     {
         return $this->hasMany(RiwayatStok::class, 'id_produk', 'id_produk');
+    }
+
+    // Foto produk ("rak foto digital") - opsional 1-3 foto, hanya untuk katalog
+    public function gambar(): HasMany
+    {
+        return $this->hasMany(ProdukGambar::class, 'id_produk', 'id_produk')->orderBy('urutan');
     }
 }
