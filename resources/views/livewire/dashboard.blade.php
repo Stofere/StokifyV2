@@ -374,8 +374,7 @@
                     <table class="w-full text-left text-sm">
                         <thead class="sticky top-0 bg-white z-10">
                             <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200">
-                                <th class="px-3 py-2.5">Tanggal</th>
-                                <th class="px-3 py-2.5">Kode Nota</th>
+                                <th class="px-3 py-2.5">Waktu Transaksi</th>
                                 <th class="px-3 py-2.5">Pelanggan</th>
                                 @if($isOwner)
                                     <th class="px-3 py-2.5 text-right">Total Harga</th>
@@ -386,9 +385,8 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($marketingDrilldownData as $trx)
                                 <tr class="hover:bg-slate-50/50 transition-colors {{ $expandedTransaksiId == $trx->id_transaksi_penjualan ? 'bg-blue-50/50' : '' }}">
-                                    <td class="px-3 py-2.5 font-semibold text-charcoal whitespace-nowrap">{{ $trx->tanggal_transaksi->translatedFormat('d M Y') }}</td>
-                                    <td class="px-3 py-2.5 font-mono text-xs text-slate-600 uppercase tracking-wider">
-                                        {{ $trx->kode_nota }}
+                                    <td class="px-3 py-2.5 font-semibold text-charcoal whitespace-nowrap">
+                                        {{ $trx->tanggal_transaksi->translatedFormat('d M Y, H:i') }}
                                         @if($trx->riwayat_koreksi_count > 0)
                                             <span class="inline-flex items-center gap-0.5 ml-1 bg-amber-50 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border border-amber-200 align-middle">
                                                 <span class="material-symbols-outlined text-[11px]">edit_note</span> Dikoreksi
@@ -413,9 +411,9 @@
                                 {{-- Expanded Detail Row --}}
                                 @if($expandedTransaksiId == $trx->id_transaksi_penjualan && count($expandedTransaksiDetail) > 0)
                                     <tr>
-                                        <td colspan="{{ $isOwner ? 5 : 4 }}" class="p-0">
+                                        <td colspan="{{ $isOwner ? 4 : 3 }}" class="p-0">
                                             <div class="bg-slate-50 border-l-4 border-blue-pro px-5 py-3">
-                                                <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 mb-2">Detail Barang pada Nota {{ $trx->kode_nota }}</p>
+                                                <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 mb-2">Detail Barang — {{ $trx->tanggal_transaksi->translatedFormat('d M Y, H:i') }}</p>
                                                 <div class="space-y-1.5">
                                                     @foreach($expandedTransaksiDetail as $detail)
                                                         <div class="flex justify-between items-center text-xs bg-white rounded-lg px-3 py-2">
@@ -438,7 +436,7 @@
                                 @endif
                             @empty
                                 <tr>
-                                    <td colspan="{{ $isOwner ? 5 : 4 }}" class="text-center text-sm text-slate-400 py-8 font-semibold">Tidak ada transaksi pada periode ini.</td>
+                                    <td colspan="{{ $isOwner ? 4 : 3 }}" class="text-center text-sm text-slate-400 py-8 font-semibold">Tidak ada transaksi pada periode ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -576,8 +574,8 @@
                     @elseif($logModalType === 'RETUR')
                         <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                             <div>
-                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Nota Asal</p>
-                                <p class="text-charcoal font-semibold font-mono uppercase">{{ $logDetailMeta['nota_asal'] }}</p>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Transaksi Asal</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['nota_asal'] }}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Tanggal</p>
@@ -664,9 +662,9 @@
                     @endif
                 </div>
 
-                @if(in_array($logModalType, ['PENJUALAN', 'RETUR']))
+                @if(in_array($logModalType, ['PENJUALAN', 'RETUR']) && $logLinkId)
                     <div class="px-6 py-3 border-t border-slate-200 bg-slate-50/50 rounded-b-2xl flex justify-end shrink-0">
-                        <a href="/transaksi/riwayat" wire:navigate class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-pro hover:underline">
+                        <a href="{{ '/transaksi/riwayat?open=' . $logLinkId . '&tipe=' . $logLinkType }}" wire:navigate class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-pro hover:underline">
                             Buka di Riwayat Transaksi <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                         </a>
                     </div>

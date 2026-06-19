@@ -41,6 +41,8 @@ class Dashboard extends Component
     public $logModalTitle = '';
     public $logDetailMeta = [];
     public $logDetailItems = [];
+    public $logLinkId = null;      // id nota/retur untuk tombol "Buka di Riwayat Transaksi"
+    public $logLinkType = null;    // 'POS' | 'RETUR'
 
     public function mount()
     {
@@ -167,6 +169,8 @@ class Dashboard extends Component
 
         $this->logDetailMeta = [];
         $this->logDetailItems = [];
+        $this->logLinkId = null;
+        $this->logLinkType = null;
 
         // 1. Log terkait Nota Penjualan (KELUAR dari kasir, dll)
         if ($log->id_transaksi_penjualan) {
@@ -176,8 +180,9 @@ class Dashboard extends Component
             if ($trx) {
                 $this->logModalType = 'PENJUALAN';
                 $this->logModalTitle = 'Detail Nota Penjualan';
+                $this->logLinkType = 'POS';
+                $this->logLinkId = $trx->id_transaksi_penjualan;
                 $this->logDetailMeta = [
-                    'kode' => $trx->kode_nota,
                     'tanggal' => $trx->tanggal_transaksi->translatedFormat('d M Y, H:i'),
                     'pelanggan' => $trx->pelanggan->nama ?? 'Walk-in',
                     'marketing' => $trx->marketing->nama ?? '-',
@@ -208,9 +213,11 @@ class Dashboard extends Component
             if ($retur) {
                 $this->logModalType = 'RETUR';
                 $this->logModalTitle = 'Detail Transaksi Retur';
+                $this->logLinkType = 'RETUR';
+                $this->logLinkId = $retur->id_retur;
                 $this->logDetailMeta = [
                     'kode' => $retur->kode_retur,
-                    'nota_asal' => $retur->transaksiPenjualan->kode_nota ?? '-',
+                    'nota_asal' => optional($retur->transaksiPenjualan)->tanggal_transaksi?->translatedFormat('d M Y, H:i') ?? '-',
                     'tanggal' => $retur->tanggal_retur->translatedFormat('d M Y, H:i'),
                     'petugas' => $retur->user->name ?? '-',
                     'total' => $retur->total_biaya_retur,

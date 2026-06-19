@@ -48,7 +48,6 @@
                     {{ $nomorUrut++ }}. &nbsp; {{ \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d/m/Y H:i') }} &nbsp;|&nbsp; 
                     Pelanggan: {{ $trx->pelanggan->nama ?? 'Umum' }} &nbsp;|&nbsp; 
                     Sales: {{ $trx->marketing->nama ?? '-' }}
-                    <span class="trx-nota">(Nota: {{ $trx->kode_nota }})</span>
                     @if($trx->status_penjualan === 'DIRETUR')
                         <span class="badge-retur">Ada Retur</span>
                     @endif

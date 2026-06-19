@@ -90,9 +90,9 @@
                                     <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Satuan</label>
                                     <select wire:model.live="satuan" class="w-full border-0 rounded-lg p-2.5 text-sm bg-slate-50">
                                         <option value="pcs">Pcs / Biji</option>
-                                        <option value="meter">Meter</option>
+                                        {{-- <option value="meter">Meter</option> --}}
                                         <option value="kg">Kilogram</option>
-                                        <option value="rol">Rol</option>
+                                        {{-- <option value="rol">Rol</option> --}}
                                     </select>
                                 </div>
                                 <div>
@@ -599,7 +599,7 @@
                                             <td class="p-3 text-xs">
                                                 @if($riwayat->id_transaksi_penjualan)
                                                     <button wire:click="lihatDetailNota({{ $riwayat->id_transaksi_penjualan }}, 'POS')" class="w-full text-left p-2 rounded-lg transition-colors {{ $isOwnerRole ? 'bg-blue-50 hover:bg-blue-100 border border-blue-100' : 'bg-sage-light/50 hover:bg-sage-light border border-sage/10' }}">
-                                                        <span class="font-bold block {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">POS: {{ $riwayat->transaksiPenjualan->kode_nota }}</span>
+                                                        <span class="font-bold block {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">POS · {{ optional($riwayat->transaksiPenjualan)->tanggal_transaksi?->format('d M Y, H:i') ?? '-' }}</span>
                                                         <span class="text-slate-500 block mt-0.5">👤 {{ $riwayat->transaksiPenjualan->pelanggan->nama ?? 'Umum' }}</span>
                                                         @if($riwayat->transaksiPenjualan->marketing)
                                                             <span class="text-slate-400 block">👔 {{ $riwayat->transaksiPenjualan->marketing->nama }}</span>
@@ -608,7 +608,7 @@
                                                 @elseif($riwayat->id_retur)
                                                     <button wire:click="lihatDetailNota({{ $riwayat->id_retur }}, 'RETUR')" class="w-full text-left bg-violet-50 hover:bg-violet-100 border border-violet-100 p-2 rounded-lg transition-colors">
                                                         <span class="font-bold text-violet-700 block">Retur: {{ $riwayat->transaksiRetur->kode_retur }}</span>
-                                                        <span class="text-slate-500 block mt-0.5">Nota: {{ $riwayat->transaksiRetur->transaksiPenjualan->kode_nota ?? '-' }}</span>
+                                                        <span class="text-slate-500 block mt-0.5">Transaksi: {{ optional(optional($riwayat->transaksiRetur)->transaksiPenjualan)->tanggal_transaksi?->format('d M Y, H:i') ?? '-' }}</span>
                                                     </button>
                                                 @else
                                                     <div class="bg-slate-50 p-2 rounded-lg text-slate-600">

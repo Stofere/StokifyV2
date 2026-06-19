@@ -109,8 +109,7 @@
                         <td class="p-4 text-center font-bold text-gray-400">{{ $nomor++ }}.</td>
                         <td class="p-4">
                             <p class="font-bold text-gray-800">{{ \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d/m/Y H:i') }}</p>
-                            <p class="text-[10px] text-gray-400 font-mono mt-1">{{ $trx->kode_nota }}</p>
-                            
+
                             <div class="flex flex-wrap gap-1 mt-1">
                                 @if($trx->status_penjualan === 'DIRETUR')
                                     <span class="inline-flex items-center gap-0.5 bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-orange-200">

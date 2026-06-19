@@ -3,6 +3,7 @@
     $isSage = ($accent ?? 'blue') === 'sage';
     $focusRing = $isSage ? 'focus:ring-sage focus:border-sage' : 'focus:ring-blue-pro focus:border-blue-pro';
     $dotNeutral = $isSage ? 'bg-sage' : 'bg-blue-400';
+    $tsChip = $isSage ? 'bg-sage-light text-sage-dark' : 'bg-blue-50 text-blue-pro';
 @endphp
 
 <div class="rounded-2xl border border-slate-200/70 bg-white overflow-hidden">
@@ -46,7 +47,13 @@
                                             @endif
                                             pada <span class="font-semibold">{{ $log->produk->nama_produk ?? '-' }}</span>.
                                         </p>
-                                        <p class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $log->created_at->translatedFormat('H:i') }} | {{ $log->keterangan }}</p>
+                                        <div class="flex items-center gap-1.5 mt-1">
+                                            <span class="material-symbols-outlined text-[13px] text-slate-400 shrink-0">schedule</span>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded font-bold text-[11px] tabular-nums {{ $tsChip }}">{{ $log->created_at->translatedFormat('d M Y') }} • {{ $log->created_at->translatedFormat('H:i') }} WIB</span>
+                                        </div>
+                                        @if($log->keterangan)
+                                            <p class="text-[10px] text-slate-400 mt-1 truncate">{{ $log->keterangan }}</p>
+                                        @endif
                                     </div>
                                     <span class="material-symbols-outlined text-[16px] text-slate-300 group-hover:text-slate-500 shrink-0 mt-1">chevron_right</span>
                                 </button>

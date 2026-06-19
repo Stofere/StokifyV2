@@ -48,6 +48,31 @@ class RiwayatTransaksi extends Component
         // Default filter: Hari ini
         $this->tgl_mulai = today()->format('Y-m-d');
         $this->tgl_akhir = today()->format('Y-m-d');
+
+        // Deep-link dari Log Aktivitas Dashboard: ?open={id}&tipe=POS|RETUR
+        // Langsung arahkan ke nota yang dipilih + samakan rentang tanggal agar muncul di daftar.
+        $openId = request()->query('open');
+        if ($openId) {
+            $tipe = strtoupper(request()->query('tipe', 'POS'));
+
+            if ($tipe === 'RETUR') {
+                $retur = TransaksiRetur::find($openId);
+                if ($retur) {
+                    $this->tgl_mulai = $retur->tanggal_retur->format('Y-m-d');
+                    $this->tgl_akhir = $retur->tanggal_retur->format('Y-m-d');
+                    $this->activeTab = 'RETUR';
+                    $this->lihatDetail((int) $openId);
+                }
+            } else {
+                $trx = TransaksiPenjualan::find($openId);
+                if ($trx) {
+                    $this->tgl_mulai = $trx->tanggal_transaksi->format('Y-m-d');
+                    $this->tgl_akhir = $trx->tanggal_transaksi->format('Y-m-d');
+                    $this->activeTab = 'POS';
+                    $this->lihatDetail((int) $openId);
+                }
+            }
+        }
     }
 
     public function switchTab($tabName)

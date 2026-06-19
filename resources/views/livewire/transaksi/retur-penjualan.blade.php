@@ -62,14 +62,13 @@
                 <table class="w-full text-left text-sm">
                     <thead>
                         <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 {{ $isOwnerRole ? 'border-b border-slate-100' : 'border-b border-sage/10' }}">
-                            <th class="p-4">Tgl Transaksi</th><th class="p-4">Kode Nota</th><th class="p-4">Plg & Mkt</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th>
+                            <th class="p-4">Waktu Transaksi</th><th class="p-4">Plg & Mkt</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($daftar_nota as $nota)
                             <tr class="transition-colors {{ $isOwnerRole ? 'hover:bg-slate-50 border-b border-slate-50' : 'hover:bg-sage-light/20 border-b border-sage/5' }}">
-                                <td class="p-4 text-slate-600">{{ $nota->tanggal_transaksi->format('d M Y, H:i') }}</td>
-                                <td class="p-4 font-headline font-bold {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">{{ $nota->kode_nota }}</td>
+                                <td class="p-4 font-headline font-bold {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">{{ $nota->tanggal_transaksi->format('d M Y, H:i') }}</td>
                                 <td class="p-4">
                                     <span class="block font-semibold text-slate-700">{{ $nota->pelanggan->nama ?? 'Umum' }}</span>
                                     <span class="block text-xs text-slate-400 mt-0.5">Sales: {{ $nota->marketing->nama ?? '-' }}</span>
@@ -84,7 +83,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="p-10 text-center text-slate-400 font-semibold">Tidak ada nota ditemukan.</td></tr>
+                            <tr><td colspan="4" class="p-10 text-center text-slate-400 font-semibold">Tidak ada nota ditemukan.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -105,7 +104,7 @@
         <div class="bg-white rounded-2xl overflow-hidden border {{ $isOwnerRole ? 'border-slate-200' : 'border-slate-200/70' }}">
             <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
                 <div>
-                    <h3 class="font-headline text-lg font-bold">Detail Nota: {{ $notaTerpilih->kode_nota }}</h3>
+                    <h3 class="font-headline text-lg font-bold">Detail Nota Penjualan</h3>
                     <p class="text-sm opacity-80 mt-0.5">{{ $notaTerpilih->tanggal_transaksi->format('d M Y, H:i') }} | Kasir: {{ $notaTerpilih->user->name ?? 'Admin' }}</p>
                 </div>
                 <div class="mt-2 md:mt-0 bg-white/10 px-4 py-2 rounded-lg">
