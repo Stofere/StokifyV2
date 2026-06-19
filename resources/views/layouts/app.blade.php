@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stokify POS V2 - Enterprise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    {{-- Icon font dimuat non-blocking (axis dipersempit ke wght 400-700 untuk memperkecil unduhan) --}}
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400..700&display=swap"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400..700&display=swap"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -16,7 +21,7 @@
 @endphp
 
 <body class="font-body antialiased min-h-screen {{ $isOwnerRole ? 'bg-slate-100' : 'bg-[#F8F9FA]' }}"
-      x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
+      x-data="{ sidebarOpen: $persist(true), mobileMenuOpen: false }">
 
     <aside class="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 sidebar-transition overflow-hidden
                   {{ $isOwnerRole ? 'bg-charcoal text-slate-300' : 'bg-sage-bg text-sage-dark' }}"
@@ -72,7 +77,7 @@
                     </div>
                 @else
                     @php $isActive = str_contains($currentRoute, $item['match']); @endphp
-                    <a href="{{ $item['href'] }}"
+                    <a href="{{ $item['href'] }}" wire:navigate
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative
                               {{ $isActive
                                   ? ($isOwnerRole
@@ -194,7 +199,7 @@
         @endphp
         @foreach($mobileNav as $mItem)
             @php $mActive = str_contains($currentRoute, $mItem['match']); @endphp
-            <a href="{{ $mItem['href'] }}"
+            <a href="{{ $mItem['href'] }}" wire:navigate
                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all
                       {{ $mActive
                           ? ($isOwnerRole ? 'text-blue-400 bg-blue-400/10' : 'text-sage-dark bg-sage/10')

@@ -64,7 +64,7 @@
                         {!! $mainText !!}<br>
                         <span class="italic text-sage">{{ $frierenJoke }}</span>
                     </p>
-                    <a href="/pos" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-sage-dark px-5 py-3 text-sm font-semibold text-white transition hover:bg-sage focus:outline-none focus:ring-4 focus:ring-sage/20">
+                    <a href="/pos" wire:navigate class="mt-5 inline-flex items-center gap-2 rounded-xl bg-sage-dark px-5 py-3 text-sm font-semibold text-white transition hover:bg-sage focus:outline-none focus:ring-4 focus:ring-sage/20">
                         <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
                         Input Transaksi Baru
                     </a>
@@ -76,7 +76,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
             {{-- Nota Count Card --}}
-            <a href="/transaksi/riwayat" class="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 transition hover:border-sage/40 hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+            <a href="/transaksi/riwayat" wire:navigate class="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 transition hover:border-sage/40 hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
                 <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-sage-light text-sage-dark transition group-hover:bg-sage group-hover:text-white">
                     <span class="material-symbols-outlined text-[26px]">receipt_long</span>
                 </div>
@@ -228,7 +228,7 @@
             </div>
 
             {{-- Card 2: Stok Menipis (Yellow) --}}
-            <a href="{{ route('laporan.stok-menipis') }}" class="bg-white rounded-2xl p-5 border border-amber-200 relative overflow-hidden group hover:shadow-md hover:border-amber-300 transition-all cursor-pointer">
+            <a href="{{ route('laporan.stok-menipis') }}" wire:navigate class="bg-white rounded-2xl p-5 border border-amber-200 relative overflow-hidden group hover:shadow-md hover:border-amber-300 transition-all cursor-pointer">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-r-full"></div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600">
@@ -241,7 +241,7 @@
             </a>
 
             {{-- Card 3: Stok Habis (Red) --}}
-            <a href="{{ route('laporan.stok-menipis') }}" class="bg-white rounded-2xl p-5 border border-red-200 relative overflow-hidden group hover:shadow-md hover:border-red-300 transition-all cursor-pointer">
+            <a href="{{ route('laporan.stok-menipis') }}" wire:navigate class="bg-white rounded-2xl p-5 border border-red-200 relative overflow-hidden group hover:shadow-md hover:border-red-300 transition-all cursor-pointer">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-r-full"></div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="bg-red-50 p-2.5 rounded-xl text-red-600">
@@ -274,7 +274,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
             {{-- Nota Count --}}
-            <a href="/transaksi/riwayat" class="bg-white rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden border border-slate-100">
+            <a href="/transaksi/riwayat" wire:navigate class="bg-white rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all group cursor-pointer relative overflow-hidden border border-slate-100">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-pro rounded-r-full"></div>
                 <div class="bg-blue-50 p-3 rounded-xl text-blue-pro group-hover:bg-blue-pro group-hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -585,9 +585,13 @@
     .frieren-eye-closed { opacity: 0; transition: opacity 0.1s ease-in-out; }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@assets
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+@endassets
+
+@script
 <script>
-    document.addEventListener('livewire:initialized', () => {
+    (() => {
         const ctx = document.getElementById('salesChart');
         if(!ctx) return;
 
@@ -635,7 +639,8 @@
                 setTimeout(() => { closedImg.style.opacity = '0'; }, 400);
             });
         }
-    });
+    })();
 </script>
+@endscript
 
 </div>

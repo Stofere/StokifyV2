@@ -215,6 +215,7 @@ class Dashboard extends Component
             'isOwner' => $isOwner,
             'omsetBulanIni' => $omsetBulanIni,
             'returBulanIni' => $returBulanIni,
+            'notaCount' => $notaCount,
             'notaCountHari' => $notaCountHari,
             'labelBulan' => $labelBulan,
             'chartLabels' => $chartLabels,
