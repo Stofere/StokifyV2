@@ -81,8 +81,8 @@
                     <span class="material-symbols-outlined text-[26px]">receipt_long</span>
                 </div>
                 <div>
-                    <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400">Total Nota Bulan Ini</p>
-                    <h3 class="font-headline text-3xl font-bold text-sage-dark mt-0.5">{{ $notaCount }}</h3>
+                    <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400">Total Nota Hari Ini</p>
+                    <h3 class="font-headline text-3xl font-bold text-sage-dark mt-0.5">{{ $notaCountHari }}</h3>
                     <p class="text-[10px] text-slate-400 mt-0.5 font-semibold">{{ $labelBulan }}</p>
                 </div>
             </a>

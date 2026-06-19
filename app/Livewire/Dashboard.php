@@ -131,6 +131,7 @@ class Dashboard extends Component
 
         // Range: Bulan ini (Tanggal 1 s/d Hari ini)
         $awalBulan = Carbon::now('Asia/Jakarta')->startOfMonth()->startOfDay();
+        $awalHariIni = Carbon::now('Asia/Jakarta')->startOfDay();
         $hariIni = Carbon::now('Asia/Jakarta')->endOfDay();
         $hariIniDate = Carbon::now('Asia/Jakarta');
         $labelBulan = Carbon::now('Asia/Jakarta')->locale('id')->translatedFormat('F Y');
@@ -146,7 +147,7 @@ class Dashboard extends Component
         }
 
         $notaCount = TransaksiPenjualan::whereBetween('tanggal_transaksi', [$awalBulan, $hariIni])->count();
-
+        $notaCountHari = TransaksiPenjualan::whereBetween('tanggal_transaksi', [$awalHariIni, $hariIni])->count();
         // 2. DATA CHART (Bulan Ini — 1 batch query)
         $dailyCounts = TransaksiPenjualan::whereBetween('tanggal_transaksi', [$awalBulan, $hariIni])
             ->selectRaw('DATE(tanggal_transaksi) as tanggal, COUNT(*) as total')
@@ -214,7 +215,7 @@ class Dashboard extends Component
             'isOwner' => $isOwner,
             'omsetBulanIni' => $omsetBulanIni,
             'returBulanIni' => $returBulanIni,
-            'notaCount' => $notaCount,
+            'notaCountHari' => $notaCountHari,
             'labelBulan' => $labelBulan,
             'chartLabels' => $chartLabels,
             'chartData' => $chartData,
