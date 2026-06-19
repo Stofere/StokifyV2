@@ -285,20 +285,8 @@
             </div>
         </div>
 
-        {{-- Chart + Activity Row --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-            {{-- Chart --}}
-            <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100" wire:ignore>
-                <h4 class="font-label text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">Grafik Jumlah Transaksi — {{ $labelBulan }}</h4>
-                <div class="w-full h-56">
-                    <canvas id="salesChart"></canvas>
-                </div>
-            </div>
-
-            {{-- Activity Log --}}
-            @include('livewire.partials.activity-log', ['accent' => 'blue'])
-        </div>
+        {{-- Activity Log (full width) --}}
+        @include('livewire.partials.activity-log', ['accent' => 'blue'])
 
         {{-- Filter Global Waktu --}}
         <div class="bg-white rounded-2xl border border-slate-100 p-5 mb-5 flex flex-col sm:flex-row items-center justify-between gap-4">

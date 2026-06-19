@@ -8,15 +8,15 @@
 <div class="rounded-2xl border border-slate-200/70 bg-white overflow-hidden">
 
     {{-- Header + Filter Tanggal Log --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 pt-5 pb-3 border-b border-slate-50">
-        <div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 pt-5 pb-3 border-b border-slate-50">
+        <div class="min-w-0">
             <h4 class="font-label text-[11px] font-bold uppercase tracking-widest text-slate-400">Log Aktivitas Sistem</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">Rentang: <span class="font-semibold text-slate-600">{{ $logFilterText }}</span></p>
+            <p class="text-[11px] text-slate-400 mt-0.5 truncate">Rentang: <span class="font-semibold text-slate-600">{{ $logFilterText }}</span></p>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-            <input type="date" wire:model.live="logStartDate" class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none text-slate-700 {{ $focusRing }}">
-            <span class="text-slate-400 text-xs">s/d</span>
-            <input type="date" wire:model.live="logEndDate" class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none text-slate-700 {{ $focusRing }}">
+        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <input type="date" wire:model.live="logStartDate" class="flex-1 sm:flex-none min-w-0 text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none text-slate-700 {{ $focusRing }}">
+            <span class="text-slate-400 text-xs shrink-0">s/d</span>
+            <input type="date" wire:model.live="logEndDate" class="flex-1 sm:flex-none min-w-0 text-xs border border-slate-200 rounded-lg px-2 py-1.5 outline-none text-slate-700 {{ $focusRing }}">
         </div>
     </div>
 
