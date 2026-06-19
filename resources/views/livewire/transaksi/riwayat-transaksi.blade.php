@@ -42,7 +42,7 @@
             <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pencarian</label>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                <input wire:model.live.debounce.500ms="keyword" type="text" placeholder="Cari Nota, Pelanggan, Sales..."
+                <input wire:model.live.debounce.500ms="keyword" type="text" placeholder="Cari Pelanggan atau Sales..."
                        class="w-full pl-10 pr-4 py-2 border-0 rounded-lg text-sm bg-slate-50 focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }}">
             </div>
         </div>
@@ -63,7 +63,7 @@
                 <table class="w-full text-left text-sm">
                     <thead>
                         <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 {{ $isOwnerRole ? 'border-b border-slate-100' : 'border-b border-sage/10' }}">
-                            <th class="p-4">Waktu & Nota</th><th class="p-4">Pelanggan & Sales</th><th class="p-4">Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Menu</th>
+                            <th class="p-4">Waktu Transaksi</th><th class="p-4">Pelanggan & Sales</th><th class="p-4">Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Menu</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,7 +71,6 @@
                             <tr class="transition-colors {{ $isOwnerRole ? 'hover:bg-slate-50 border-b border-slate-50' : 'hover:bg-sage-light/20 border-b border-sage/5' }}">
                                 <td class="p-4">
                                     <p class="font-headline font-bold mt-0.5 {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">{{ $pos->tanggal_transaksi->format('d/m/Y H:i') }}</p>
-                                    <p class="text-[10px] text-slate-400 font-semibold">{{ $pos->kode_nota }}</p>
                                     <div class="flex flex-wrap gap-1 mt-1">
                                         @if($pos->status_penjualan === 'DIRETUR')
                                             <span class="inline-flex items-center gap-0.5 bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-orange-200">
@@ -126,7 +125,7 @@
                                     <p class="text-[10px] text-slate-400 font-semibold">{{ $retur->kode_retur }}</p>
                                 </td>
                                 <td class="p-4">
-                                    <p class="text-xs text-slate-400 font-semibold mb-0.5">Nota: {{ $retur->transaksiPenjualan->kode_nota ?? '-' }}</p>
+                                    <p class="text-xs text-slate-400 font-semibold mb-0.5">Dari transaksi: {{ optional($retur->transaksiPenjualan)->tanggal_transaksi?->format('d/m/Y H:i') ?? '-' }}</p>
                                     <p class="font-semibold text-slate-700">{{ $retur->transaksiPenjualan->pelanggan->nama ?? 'Umum' }}</p>
                                 </td>
                                 <td class="p-4 text-slate-600 font-semibold">{{ $retur->user->name ?? '-' }}</td>

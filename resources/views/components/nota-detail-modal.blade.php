@@ -26,7 +26,11 @@
                     {{ $tipe === 'POS' ? 'Detail Nota Penjualan' : 'Detail Nota Retur' }}
                 </h3>
                 <div class="flex flex-wrap items-center gap-2 mt-1">
-                    <p class="text-sm opacity-80">Kode: {{ $nota->kode_nota ?? $nota->kode_retur }}</p>
+                    @if($tipe === 'POS')
+                        <p class="text-sm opacity-80">{{ $nota->tanggal_transaksi->format('d M Y, H:i') }}</p>
+                    @else
+                        <p class="text-sm opacity-80">Kode: {{ $nota->kode_retur }}</p>
+                    @endif
                     @if($tipe === 'POS' && ($nota->status_penjualan ?? '') === 'DIRETUR')
                         <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/15 text-white">
                             <span class="material-symbols-outlined text-[13px]">undo</span> Ada Retur
@@ -176,11 +180,11 @@
                     <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Waktu Retur</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $nota->tanggal_retur->format('d M Y, H:i') }}</p></div>
                     <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Diproses Oleh</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $nota->user->name ?? '-' }}</p></div>
                     <div class="bg-slate-50 p-3 rounded-lg">
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nota POS Asal</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Transaksi Asal</p>
                         @if($returLinkAction)
-                            <p class="font-semibold text-sm {{ $accent }} mt-1 cursor-pointer underline" wire:click="{{ $returLinkAction }}({{ $nota->transaksiPenjualan->id_transaksi_penjualan }}, 'POS')">{{ $nota->transaksiPenjualan->kode_nota ?? '-' }}</p>
+                            <p class="font-semibold text-sm {{ $accent }} mt-1 cursor-pointer underline" wire:click="{{ $returLinkAction }}({{ $nota->transaksiPenjualan->id_transaksi_penjualan }}, 'POS')">{{ optional($nota->transaksiPenjualan)->tanggal_transaksi?->format('d M Y, H:i') ?? '-' }}</p>
                         @else
-                            <p class="font-semibold text-sm text-slate-700 mt-1">{{ $nota->transaksiPenjualan->kode_nota ?? '-' }}</p>
+                            <p class="font-semibold text-sm text-slate-700 mt-1">{{ optional($nota->transaksiPenjualan)->tanggal_transaksi?->format('d M Y, H:i') ?? '-' }}</p>
                         @endif
                     </div>
                     <div class="bg-slate-50 p-3 rounded-lg"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pelanggan</p><p class="font-semibold text-sm text-slate-700 mt-1">{{ $nota->transaksiPenjualan->pelanggan->nama ?? 'Umum' }}</p></div>
