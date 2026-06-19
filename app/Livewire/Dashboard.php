@@ -30,15 +30,47 @@ class Dashboard extends Component
     public $customerDrilldownMarketing = [];
     public $customerDrilldownProducts = [];
 
+    // Filter rentang tanggal khusus Log Aktivitas (default: 1 minggu terakhir)
+    public $logStartDate;
+    public $logEndDate;
+    public $logFilterText = '';
+
+    // Drilldown Log Aktivitas
+    public $isLogModalOpen = false;
+    public $logModalType = null;   // 'PENJUALAN' | 'RETUR' | 'STOK'
+    public $logModalTitle = '';
+    public $logDetailMeta = [];
+    public $logDetailItems = [];
+
     public function mount()
     {
         $this->startDate = Carbon::now('Asia/Jakarta')->startOfMonth()->format('Y-m-d');
         $this->endDate = Carbon::now('Asia/Jakarta')->endOfMonth()->format('Y-m-d');
         $this->updateFilterText();
+
+        // Default log: 7 hari terakhir (termasuk hari ini)
+        $this->logEndDate = Carbon::now('Asia/Jakarta')->format('Y-m-d');
+        $this->logStartDate = Carbon::now('Asia/Jakarta')->subDays(6)->format('Y-m-d');
+        $this->updateLogFilterText();
     }
 
     public function updatedStartDate() { $this->updateFilterText(); }
     public function updatedEndDate() { $this->updateFilterText(); }
+
+    public function updatedLogStartDate() { $this->updateLogFilterText(); }
+    public function updatedLogEndDate() { $this->updateLogFilterText(); }
+
+    private function updateLogFilterText()
+    {
+        Carbon::setLocale('id');
+        $start = Carbon::parse($this->logStartDate);
+        $end = Carbon::parse($this->logEndDate);
+        if ($start->isSameDay($end)) {
+            $this->logFilterText = $start->translatedFormat('d M Y');
+        } else {
+            $this->logFilterText = $start->translatedFormat('d M Y') . ' - ' . $end->translatedFormat('d M Y');
+        }
+    }
 
     private function updateFilterText()
     {
@@ -125,6 +157,100 @@ class Dashboard extends Component
     {
         $this->isCustomerModalOpen = false;
     }
+
+    public function openLogDetail($logId)
+    {
+        $log = RiwayatStok::with(['user', 'produk'])->find($logId);
+        if (! $log) {
+            return;
+        }
+
+        $this->logDetailMeta = [];
+        $this->logDetailItems = [];
+
+        // 1. Log terkait Nota Penjualan (KELUAR dari kasir, dll)
+        if ($log->id_transaksi_penjualan) {
+            $trx = TransaksiPenjualan::with(['pelanggan', 'marketing', 'user', 'detailPenjualan.produk'])
+                ->find($log->id_transaksi_penjualan);
+
+            if ($trx) {
+                $this->logModalType = 'PENJUALAN';
+                $this->logModalTitle = 'Detail Nota Penjualan';
+                $this->logDetailMeta = [
+                    'kode' => $trx->kode_nota,
+                    'tanggal' => $trx->tanggal_transaksi->translatedFormat('d M Y, H:i'),
+                    'pelanggan' => $trx->pelanggan->nama ?? 'Walk-in',
+                    'marketing' => $trx->marketing->nama ?? '-',
+                    'kasir' => $trx->user->name ?? '-',
+                    'status' => $trx->status_penjualan,
+                    'total' => $trx->total_harga,
+                ];
+                $this->logDetailItems = $trx->detailPenjualan->map(fn ($d) => [
+                    'nama' => $d->produk->nama_produk ?? '-',
+                    'jumlah' => $d->jumlah_display,
+                    'satuan' => $d->satuan_saat_jual,
+                    'harga' => $d->harga_satuan,
+                    'subtotal' => $d->subtotal,
+                ])->toArray();
+                $this->isLogModalOpen = true;
+
+                return;
+            }
+        }
+
+        // 2. Log terkait Retur (MASUK karena retur)
+        if ($log->id_retur) {
+            $retur = TransaksiRetur::with([
+                'transaksiPenjualan', 'user',
+                'detailRetur.produkDikembalikan', 'detailRetur.produkPengganti',
+            ])->find($log->id_retur);
+
+            if ($retur) {
+                $this->logModalType = 'RETUR';
+                $this->logModalTitle = 'Detail Transaksi Retur';
+                $this->logDetailMeta = [
+                    'kode' => $retur->kode_retur,
+                    'nota_asal' => $retur->transaksiPenjualan->kode_nota ?? '-',
+                    'tanggal' => $retur->tanggal_retur->translatedFormat('d M Y, H:i'),
+                    'petugas' => $retur->user->name ?? '-',
+                    'total' => $retur->total_biaya_retur,
+                ];
+                $this->logDetailItems = $retur->detailRetur->map(fn ($d) => [
+                    'dikembalikan' => $d->produkDikembalikan->nama_produk ?? '-',
+                    'pengganti' => $d->produkPengganti->nama_produk ?? null,
+                    'jumlah' => $d->jumlah + 0,
+                    'kondisi' => $d->kondisi_barang_dikembalikan,
+                    'subtotal' => $d->subtotal_biaya,
+                ])->toArray();
+                $this->isLogModalOpen = true;
+
+                return;
+            }
+        }
+
+        // 3. Penyesuaian stok manual / mutasi rol (tidak terkait nota)
+        $isRol = in_array($log->tipe, ['ROL_MASUK', 'ROL_KELUAR']);
+        $this->logModalType = 'STOK';
+        $this->logModalTitle = 'Detail Penyesuaian Stok';
+        $this->logDetailMeta = [
+            'tipe' => str_replace('_', ' ', $log->tipe),
+            'produk' => $log->produk->nama_produk ?? '-',
+            'petugas' => $log->user->name ?? 'Sistem',
+            'tanggal' => $log->created_at->translatedFormat('d M Y, H:i'),
+            'is_rol' => $isRol,
+            'jumlah' => $isRol ? abs($log->rol_mutasi) : abs($log->jumlah) + 0,
+            'sebelum' => $isRol ? $log->rol_sebelum : $log->stok_sebelum + 0,
+            'sesudah' => $isRol ? $log->rol_sesudah : $log->stok_sesudah + 0,
+            'keterangan' => $log->keterangan,
+        ];
+        $this->isLogModalOpen = true;
+    }
+
+    public function closeLogModal()
+    {
+        $this->isLogModalOpen = false;
+    }
+
     public function render()
     {
         $isOwner = Auth::user()->peran === 'OWNER';
@@ -185,12 +311,15 @@ class Dashboard extends Component
             ->orderByDesc($isOwner ? 'total_revenue' : 'total_nota')
             ->limit(5)->get();
 
-        // 5. AUDIT LOG (Aktivitas User Hari Ini)
-        $aktivitasHariIni = RiwayatStok::with(['user', 'produk', 'transaksiPenjualan'])
-            ->whereDate('created_at', today())
+        // 5. AUDIT LOG (Aktivitas User — rentang tanggal, dikelompokkan per hari)
+        $logStart = Carbon::parse($this->logStartDate)->startOfDay();
+        $logEnd = Carbon::parse($this->logEndDate)->endOfDay();
+        $aktivitasLog = RiwayatStok::with(['user', 'produk'])
+            ->whereBetween('created_at', [$logStart, $logEnd])
             ->orderBy('id_riwayat', 'desc')
-            ->limit(8)
-            ->get();
+            ->limit(150)
+            ->get()
+            ->groupBy(fn ($l) => $l->created_at->format('Y-m-d'));
 
         // 6. MONITORING GUDANG (Stok Menipis & Habis)
         $baseGudang = Produk::where('status_aktif', true)->where('lacak_stok', true);
@@ -222,7 +351,7 @@ class Dashboard extends Component
             'chartData' => $chartData,
             'topMarketing' => $topMarketing,
             'topPelanggan' => $topPelanggan,
-            'aktivitasHariIni' => $aktivitasHariIni,
+            'aktivitasLog' => $aktivitasLog,
             'totalSKU' => $totalSKU,
             'stokHabis' => $stokHabis,
             'stokMenipis' => $stokMenipis,

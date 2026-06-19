@@ -97,35 +97,7 @@
         </div>
 
         {{-- Bento Row 2: Activity Log --}}
-        <div class="rounded-2xl border border-slate-200/70 bg-white overflow-hidden">
-            <h4 class="font-label text-[11px] font-bold uppercase tracking-widest text-slate-400 px-6 pt-5 pb-3">Log Aktivitas Sistem Hari Ini</h4>
-            <div class="px-6 pb-5 max-h-[280px] overflow-y-auto">
-                @if(count($aktivitasHariIni) == 0)
-                    <p class="text-center text-slate-400 text-sm font-semibold py-8">Belum ada aktivitas hari ini.</p>
-                @else
-                    <div class="space-y-3">
-                        @foreach($aktivitasHariIni as $log)
-                            <div class="flex gap-3 text-sm items-start">
-                                <div class="w-2 h-2 mt-1.5 rounded-full shrink-0 {{ in_array($log->tipe, ['MASUK', 'KOREKSI_PLUS', 'ROL_MASUK']) ? 'bg-emerald-400' : (in_array($log->tipe, ['KELUAR', 'KOREKSI_MINUS', 'ROL_KELUAR']) ? 'bg-red-400' : 'bg-sage') }}"></div>
-                                <div>
-                                    <p class="font-semibold text-charcoal">{{ $log->user->name }}</p>
-                                    <p class="text-slate-500 text-xs mt-0.5">
-                                        {{ str_replace('_', ' ', $log->tipe) }} 
-                                        @if(in_array($log->tipe, ['ROL_MASUK', 'ROL_KELUAR']))
-                                            <span class="font-bold text-indigo-600">{{ abs($log->rol_mutasi) }}</span> Rol 
-                                        @else
-                                            <span class="font-bold text-slate-700">{{ abs($log->jumlah) }}</span> qty 
-                                        @endif
-                                        pada <span class="font-semibold">{{ $log->produk->nama_produk }}</span>.
-                                    </p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">{{ $log->created_at->diffForHumans() }} | {{ $log->keterangan }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </div>
+        @include('livewire.partials.activity-log', ['accent' => 'sage'])
 
         {{-- Filter Global Waktu --}}
         <div class="bg-white rounded-2xl border border-slate-100 p-5 mb-5 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -325,35 +297,7 @@
             </div>
 
             {{-- Activity Log --}}
-            <div class="bg-white rounded-2xl overflow-hidden">
-            <h4 class="font-label text-[11px] font-bold uppercase tracking-widest text-slate-400 px-6 pt-5 pb-3">Log Aktivitas Sistem Hari Ini</h4>
-            <div class="px-6 pb-5 max-h-[280px] overflow-y-auto">
-                @if(count($aktivitasHariIni) == 0)
-                    <p class="text-center text-slate-400 text-sm font-semibold py-8">Belum ada aktivitas hari ini.</p>
-                @else
-                    <div class="space-y-3">
-                        @foreach($aktivitasHariIni as $log)
-                            <div class="flex gap-3 text-sm items-start">
-                                <div class="w-2 h-2 mt-1.5 rounded-full shrink-0 {{ in_array($log->tipe, ['MASUK', 'KOREKSI_PLUS', 'ROL_MASUK']) ? 'bg-emerald-400' : (in_array($log->tipe, ['KELUAR', 'KOREKSI_MINUS', 'ROL_KELUAR']) ? 'bg-red-400' : 'bg-blue-400') }}"></div>
-                                <div>
-                                    <p class="font-semibold text-charcoal">{{ $log->user->name }}</p>
-                                    <p class="text-slate-500 text-xs mt-0.5">
-                                        {{ str_replace('_', ' ', $log->tipe) }} 
-                                        @if(in_array($log->tipe, ['ROL_MASUK', 'ROL_KELUAR']))
-                                            <span class="font-bold text-indigo-600">{{ abs($log->rol_mutasi) }}</span> Rol 
-                                        @else
-                                            <span class="font-bold text-slate-700">{{ abs($log->jumlah) }}</span> qty 
-                                        @endif
-                                        pada <span class="font-semibold">{{ $log->produk->nama_produk }}</span>.
-                                    </p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">{{ $log->created_at->diffForHumans() }} | {{ $log->keterangan }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </div>
+            @include('livewire.partials.activity-log', ['accent' => 'blue'])
         </div>
 
         {{-- Filter Global Waktu --}}
@@ -569,6 +513,176 @@
                         @endforelse
                     </div>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Drilldown Log Aktivitas (klik salah satu log) --}}
+    @if($isLogModalOpen)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" wire:click.self="closeLogModal">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[85vh]">
+                <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50 shrink-0 rounded-t-2xl">
+                    <div>
+                        <h3 class="font-headline font-bold text-lg text-charcoal">{{ $logModalTitle }}</h3>
+                        @if(!empty($logDetailMeta['kode']))
+                            <p class="text-xs text-slate-500 mt-0.5 font-mono uppercase tracking-wider">{{ $logDetailMeta['kode'] }}</p>
+                        @endif
+                    </div>
+                    <button wire:click="closeLogModal" class="text-slate-400 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 space-y-5">
+
+                    {{-- ===== NOTA PENJUALAN ===== --}}
+                    @if($logModalType === 'PENJUALAN')
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Tanggal</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['tanggal'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Status</p>
+                                <p class="font-semibold {{ $logDetailMeta['status'] === 'DIRETUR' ? 'text-amber-600' : ($logDetailMeta['status'] === 'DIBATALKAN' ? 'text-red-500' : 'text-emerald-600') }}">{{ $logDetailMeta['status'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Pelanggan</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['pelanggan'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Marketing</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['marketing'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Kasir</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['kasir'] }}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 mb-2">Barang</p>
+                            <div class="space-y-1.5">
+                                @foreach($logDetailItems as $item)
+                                    <div class="flex justify-between items-center gap-2 text-xs bg-slate-50 rounded-lg px-3 py-2">
+                                        <span class="font-semibold text-charcoal min-w-0 truncate">{{ $item['nama'] }}</span>
+                                        <div class="flex items-center gap-3 text-slate-500 shrink-0">
+                                            <span>{{ $item['jumlah'] }} {{ $item['satuan'] }}</span>
+                                            <span class="text-slate-300">×</span>
+                                            <span>Rp {{ number_format($item['harga'], 0, ',', '.') }}</span>
+                                            <span class="font-bold text-charcoal">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        @if($isOwner)
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Total Nota</span>
+                                <span class="font-headline font-bold text-lg text-emerald-600">Rp {{ number_format($logDetailMeta['total'], 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
+                    {{-- ===== RETUR ===== --}}
+                    @elseif($logModalType === 'RETUR')
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Nota Asal</p>
+                                <p class="text-charcoal font-semibold font-mono uppercase">{{ $logDetailMeta['nota_asal'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Tanggal</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['tanggal'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Petugas</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['petugas'] }}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 mb-2">Barang Diretur</p>
+                            <div class="space-y-1.5">
+                                @foreach($logDetailItems as $item)
+                                    <div class="text-xs bg-slate-50 rounded-lg px-3 py-2">
+                                        <div class="flex justify-between items-center gap-2">
+                                            <span class="font-semibold text-charcoal min-w-0 truncate">{{ $item['dikembalikan'] }}</span>
+                                            <span class="text-slate-500 shrink-0">{{ $item['jumlah'] }} pcs</span>
+                                        </div>
+                                        @if(!empty($item['pengganti']))
+                                            <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[13px] text-blue-pro">swap_horiz</span>
+                                                Diganti: <span class="font-semibold text-charcoal">{{ $item['pengganti'] }}</span>
+                                            </p>
+                                        @endif
+                                        @if(!empty($item['kondisi']))
+                                            <p class="text-[10px] text-slate-400 mt-0.5">Kondisi: {{ $item['kondisi'] }}</p>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        @if($isOwner)
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Total Biaya Retur</span>
+                                <span class="font-headline font-bold text-lg text-amber-600">Rp {{ number_format($logDetailMeta['total'], 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
+                    {{-- ===== PENYESUAIAN STOK MANUAL / ROL ===== --}}
+                    @else
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Jenis</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['tipe'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Produk</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['produk'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Petugas</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['petugas'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Waktu</p>
+                                <p class="text-charcoal font-semibold">{{ $logDetailMeta['tanggal'] }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-3 sm:gap-5 bg-slate-50 rounded-xl p-4">
+                            <div class="text-center">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Sebelum</p>
+                                <p class="text-xl font-headline font-bold text-charcoal">{{ $logDetailMeta['sebelum'] }}</p>
+                            </div>
+                            <div class="flex flex-col items-center text-slate-400">
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                                <span class="text-[10px] font-bold {{ $logDetailMeta['is_rol'] ? 'text-indigo-600' : 'text-slate-500' }}">{{ $logDetailMeta['jumlah'] }} {{ $logDetailMeta['is_rol'] ? 'Rol' : 'Qty' }}</span>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Sesudah</p>
+                                <p class="text-xl font-headline font-bold text-charcoal">{{ $logDetailMeta['sesudah'] }}</p>
+                            </div>
+                        </div>
+
+                        @if(!empty($logDetailMeta['keterangan']))
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Keterangan</p>
+                                <p class="text-sm text-slate-600">{{ $logDetailMeta['keterangan'] }}</p>
+                            </div>
+                        @endif
+                    @endif
+                </div>
+
+                @if(in_array($logModalType, ['PENJUALAN', 'RETUR']))
+                    <div class="px-6 py-3 border-t border-slate-200 bg-slate-50/50 rounded-b-2xl flex justify-end shrink-0">
+                        <a href="/transaksi/riwayat" wire:navigate class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-pro hover:underline">
+                            Buka di Riwayat Transaksi <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     @endif
