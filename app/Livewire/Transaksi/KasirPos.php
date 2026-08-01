@@ -125,6 +125,7 @@ class KasirPos extends Component
 
             $this->keranjang[] = [
                 'id_produk' => $produk->id_produk,
+                'kode_barang' => $produk->kode_barang, // Penanda SKU di keranjang & recheck nota
                 'nama_produk' => $produk->nama_produk,
                 'satuan_utama' => strtolower($produk->satuan),
                 'harga_utama' => $produk->harga_jual_satuan,

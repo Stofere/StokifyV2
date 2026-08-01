@@ -268,7 +268,12 @@
                             
                             <div class="flex justify-between items-start mb-2">
                                 <div class="pr-6">
-                                    <h4 class="font-semibold text-sm text-slate-800 leading-tight">{{ $item['nama_produk'] }}</h4>
+                                    <h4 class="font-semibold text-sm text-slate-800 leading-tight">
+                                        {{ $item['nama_produk'] }}
+                                        @if(!empty($item['kode_barang']))
+                                            <span class="inline-block align-middle ml-1 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-wider text-white {{ $isOwnerRole ? 'bg-blue-pro' : 'bg-sage-dark' }}">[{{ strtoupper($item['kode_barang']) }}]</span>
+                                        @endif
+                                    </h4>
                                     <p class="text-xs font-bold mt-1 {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage' }}">Rp {{ number_format($item['harga_terpakai'], 0, ',', '.') }}</p>
                                 </div>
                                 <button wire:click="hapusItem({{ $index }})" class="absolute top-3 right-3 text-red-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-[18px]">close</span></button>
@@ -412,7 +417,12 @@
                             @foreach($keranjang as $item)
                                 <div class="p-3 flex justify-between items-center">
                                     <div>
-                                        <p class="font-semibold text-sm text-slate-800">{{ $item['nama_produk'] }}</p>
+                                        <p class="font-semibold text-sm text-slate-800">
+                                            {{ $item['nama_produk'] }}
+                                            @if(!empty($item['kode_barang']))
+                                                <span class="inline-block align-middle ml-1 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-wider text-white {{ $isOwnerRole ? 'bg-blue-pro' : 'bg-sage-dark' }}">[{{ strtoupper($item['kode_barang']) }}]</span>
+                                            @endif
+                                        </p>
                                         <p class="text-xs text-slate-500">
                                             {{ $item['jumlah_jual'] }} {{ $item['tipe_jual'] == 'eceran' ? 'Meter' : strtoupper($item['satuan_utama']) }}
                                             x Rp {{ number_format($item['harga_terpakai'], 0, ',', '.') }}
