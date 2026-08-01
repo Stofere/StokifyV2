@@ -124,7 +124,10 @@
                         @foreach($notaTerpilih->detailPenjualan as $detail)
                             @php $sisaBisaDiretur = $detail->jumlah - $detail->jumlah_diretur; @endphp
                             <tr class="{{ $sisaBisaDiretur <= 0 ? 'opacity-40' : '' }} {{ $isOwnerRole ? 'hover:bg-slate-50 border-b border-slate-50' : 'hover:bg-sage-light/20 border-b border-sage/5' }} transition-colors">
-                                <td class="p-4 font-semibold text-slate-700">{{ $detail->produk->nama_produk }}</td>
+                                <td class="p-4 font-semibold text-slate-700">
+                                    {{ $detail->produk->nama_produk }}
+                                    <x-kode-barang :kode="$detail->produk->kode_barang" :owner="$isOwnerRole" />
+                                </td>
                                 <td class="p-4 text-center text-slate-600 font-semibold">{{ fmod($detail->jumlah, 1) == 0 ? (int)$detail->jumlah : $detail->jumlah }} {{ strtoupper($detail->satuan_saat_jual) }}</td>
                                 <td class="p-4 text-center font-bold text-red-500">{{ fmod($detail->jumlah_diretur, 1) == 0 ? (int)$detail->jumlah_diretur : $detail->jumlah_diretur }}</td>
                                 <td class="p-4 text-center font-bold text-emerald-600">{{ fmod($sisaBisaDiretur, 1) == 0 ? (int)$sisaBisaDiretur : $sisaBisaDiretur }} {{ strtoupper($detail->satuan_saat_jual) }}</td>
@@ -180,7 +183,10 @@
                     <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b pb-2 {{ $isOwnerRole ? 'border-slate-200' : 'border-sage/15' }}">Barang Dikembalikan Pelanggan</h3>
 
                     <div class="mb-5 bg-white p-4 rounded-xl shadow-sm">
-                        <p class="font-headline text-lg font-bold {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }} leading-tight">{{ $detailTerpilih->produk->nama_produk }}</p>
+                        <p class="font-headline text-lg font-bold {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }} leading-tight">
+                            {{ $detailTerpilih->produk->nama_produk }}
+                            <x-kode-barang :kode="$detailTerpilih->produk->kode_barang" tone="bg-red-600" />
+                        </p>
                         <p class="text-sm text-slate-500 mt-1 font-semibold">Harga Nota: <span class="{{ $isOwnerRole ? 'text-blue-pro' : 'text-sage' }}">Rp {{ number_format($detailTerpilih->harga_satuan, 0, ',', '.') }}</span> <span class="text-[10px] text-slate-400">/{{ $detailTerpilih->satuan_saat_jual }}</span></p>
                         @if($isDualUnitRetur && $detailTerpilih->jumlah_potong_gudang)
                             <p class="text-[10px] text-amber-600 font-bold mt-1 bg-amber-50 px-2 py-0.5 rounded inline-block">📦 Timbangan saat jual: {{ $detailTerpilih->jumlah_potong_gudang }} KG untuk {{ $detailTerpilih->jumlah }} Meter</p>
@@ -243,7 +249,10 @@
                                     @foreach($hasil_pencarian_produk as $hasil)
                                         <div wire:click="pilihBarangPengganti({{ $hasil->id_produk }})" class="p-3 cursor-pointer hover:bg-slate-50 flex justify-between items-center transition-colors border-b border-slate-50">
                                             <div>
-                                                <p class="text-sm font-bold text-slate-700">{{ $hasil->nama_produk }}</p>
+                                                <p class="text-sm font-bold text-slate-700">
+                                                    {{ $hasil->nama_produk }}
+                                                    <x-kode-barang :kode="$hasil->kode_barang" :owner="$isOwnerRole" />
+                                                </p>
                                                 <p class="text-xs font-semibold text-emerald-600">Rp {{ number_format($hasil->harga_jual_satuan, 0, ',', '.') }}</p>
                                             </div>
                                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $hasil->stok_saat_ini > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500' }}">{{ $hasil->stok_display }}</span>
@@ -258,7 +267,10 @@
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Akan Diberikan:</p>
-                                    <p class="font-headline font-bold {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }} leading-tight">{{ $produk_pengganti->nama_produk }}</p>
+                                    <p class="font-headline font-bold {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }} leading-tight">
+                                        {{ $produk_pengganti->nama_produk }}
+                                        <x-kode-barang :kode="$produk_pengganti->kode_barang" tone="bg-emerald-600" />
+                                    </p>
                                 </div>
                                 <div class="text-right">
                                     <p class="font-headline text-xl font-bold text-slate-700">Rp {{ number_format($hargaPenggantiDisplay, 0, ',', '.') }}</p>

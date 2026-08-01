@@ -74,8 +74,9 @@
                             @endphp
                             <tr>
                                 <td class="p-3 align-top">
-                                    <span class="font-bold text-gray-800 inline-flex items-center gap-1.5">
+                                    <span class="font-bold text-gray-800 inline-flex flex-wrap items-center gap-1.5">
                                         {{ $det->produk->nama_produk }}
+                                        <x-kode-barang :kode="$det->produk->kode_barang" :owner="$owner" />
                                         @if($sudahKoreksi)
                                             <span class="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
                                                 <span class="material-symbols-outlined text-[11px]">edit_note</span> Dikoreksi
@@ -103,7 +104,7 @@
                                                     Diretur {{ $jejak['nota_retur']->tanggal_retur->format('d/m/Y H:i') }}
                                                 </p>
                                                 <p class="text-gray-700 mb-0.5">Dikembalikan <strong class="text-red-600">{{ $fmt($jejak['detail']->jumlah) }} {{ strtoupper($det->satuan_saat_jual) }}</strong> (Kondisi: {{ $jejak['detail']->kondisi_barang_dikembalikan }})</p>
-                                                <p class="text-gray-700 mb-0.5">Diganti dengan <strong class="text-green-700">{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> ({{ $fmt($jejak['detail']->jumlah) }} {{ strtoupper($det->satuan_saat_jual) }})</p>
+                                                <p class="text-gray-700 mb-0.5">Diganti dengan <strong class="text-green-700">{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> <x-kode-barang :kode="$jejak['detail']->produkPengganti->kode_barang" tone="bg-emerald-600" /> ({{ $fmt($jejak['detail']->jumlah) }} {{ strtoupper($det->satuan_saat_jual) }})</p>
                                                 <p class="bg-white p-1.5 rounded border border-orange-100 text-gray-600 italic mt-1.5">"{{ $jejak['nota_retur']->catatan ?? 'Tanpa catatan' }}"</p>
                                                 @if($returLinkAction)
                                                     <button wire:click="{{ $returLinkAction }}({{ $jejak['nota_retur']->id_retur }}, 'RETUR')" class="mt-2 bg-white border border-orange-300 text-orange-700 hover:bg-orange-100 px-3 py-1 rounded-full font-bold transition-colors w-max text-[10px]">
@@ -156,7 +157,10 @@
                             @foreach($nota->riwayatKoreksi->sortByDesc('created_at') as $kor)
                                 <div class="border border-slate-200 rounded-lg p-3 text-xs bg-white">
                                     <div class="flex flex-wrap justify-between items-center gap-2 mb-1.5">
-                                        <span class="font-bold text-slate-700">{{ $kor->produk->nama_produk ?? '-' }}</span>
+                                        <span class="font-bold text-slate-700">
+                                            {{ $kor->produk->nama_produk ?? '-' }}
+                                            <x-kode-barang :kode="$kor->produk->kode_barang ?? null" :owner="$owner" />
+                                        </span>
                                         <span class="text-slate-400 text-[10px] font-semibold">{{ \Carbon\Carbon::parse($kor->created_at)->format('d M Y, H:i') }}</span>
                                     </div>
                                     <div class="flex items-center gap-2 mb-1.5">
@@ -207,7 +211,10 @@
                             <div class="flex flex-col md:flex-row">
                                 <div class="flex-1 bg-red-50 p-4">
                                     <p class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-2">Dikembalikan</p>
-                                    <p class="font-bold text-red-700 text-sm">{{ $detRetur->produkDikembalikan->nama_produk }}</p>
+                                    <p class="font-bold text-red-700 text-sm">
+                                        {{ $detRetur->produkDikembalikan->nama_produk }}
+                                        <x-kode-barang :kode="$detRetur->produkDikembalikan->kode_barang" tone="bg-red-600" />
+                                    </p>
                                     <div class="mt-2 space-y-1 text-xs text-slate-600">
                                         <p>Jumlah: <strong class="text-red-600">{{ $fmt($detRetur->jumlah) }} {{ $satuanAsli }}</strong></p>
                                         <p>Harga Nota: <strong>Rp {{ number_format($hargaAsli, 0, ',', '.') }}</strong> /{{ $satuanAsli }}</p>
@@ -219,7 +226,10 @@
                                 </div>
                                 <div class="flex-1 bg-emerald-50 p-4">
                                     <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mb-2">Pengganti</p>
-                                    <p class="font-bold text-emerald-700 text-sm">{{ $detRetur->produkPengganti->nama_produk }}</p>
+                                    <p class="font-bold text-emerald-700 text-sm">
+                                        {{ $detRetur->produkPengganti->nama_produk }}
+                                        <x-kode-barang :kode="$detRetur->produkPengganti->kode_barang" tone="bg-emerald-600" />
+                                    </p>
                                     <div class="mt-2 space-y-1 text-xs text-slate-600">
                                         <p>Jumlah: <strong class="text-emerald-600">{{ $fmt($detRetur->jumlah) }} {{ $satuanAsli }}</strong></p>
                                     </div>
