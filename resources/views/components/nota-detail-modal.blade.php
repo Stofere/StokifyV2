@@ -57,9 +57,11 @@
                 </div>
 
                 <h4 class="font-semibold text-sm text-slate-700 mb-2 border-b pb-2 border-slate-100">Daftar Barang</h4>
-                <table class="w-full text-left text-sm">
+                <div class="overflow-x-auto">
+                <table class="w-full min-w-130 text-left text-sm">
                     <thead>
                         <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                            <th class="px-2 py-3 w-8 text-center">No.</th>
                             <th class="p-3">Barang</th>
                             <th class="p-3 text-center">Qty</th>
                             <th class="p-3 text-right">Harga</th>
@@ -70,9 +72,12 @@
                     <tbody class="divide-y">
                         @foreach($nota->detailPenjualan as $det)
                             @php
+                                // Ditangkap ke variabel karena $loop di-shadow oleh loop jejak retur di bawah.
+                                $no = $loop->iteration;
                                 $sudahKoreksi = $jumlahKoreksi > 0 && $nota->riwayatKoreksi->where('id_detail_penjualan', $det->id_detail_penjualan)->count() > 0;
                             @endphp
                             <tr>
+                                <td class="px-2 py-3 text-center align-top text-slate-400 font-semibold tabular-nums">{{ $no }}</td>
                                 <td class="p-3 align-top">
                                     <span class="font-bold text-gray-800 inline-flex flex-wrap items-center gap-1.5">
                                         {{ $det->produk->nama_produk }}
@@ -139,12 +144,14 @@
                     </tbody>
                     <tfoot>
                         <tr class="bg-slate-50">
-                            <td colspan="3" class="p-3 text-right font-bold text-slate-500 uppercase text-xs">Total:</td>
+                            {{-- colspan mengikuti jumlah kolom sebelum Subtotal: No. + Barang + Qty + Harga --}}
+                            <td colspan="4" class="p-3 text-right font-bold text-slate-500 uppercase text-xs">Total:</td>
                             <td class="p-3 text-right font-headline font-bold text-lg text-emerald-600">Rp {{ number_format($nota->total_harga, 0, ',', '.') }}</td>
                             @if($koreksiAction)<td></td>@endif
                         </tr>
                     </tfoot>
                 </table>
+                </div>
 
                 {{-- Riwayat koreksi qty (read-only, tampil di semua halaman) --}}
                 @if($jumlahKoreksi > 0)
@@ -203,6 +210,7 @@
                 <div class="space-y-4">
                     @foreach($nota->detailRetur as $detRetur)
                         @php
+                            $no = $loop->iteration;
                             $detailAsli = $nota->transaksiPenjualan->detailPenjualan->firstWhere('id_produk', $detRetur->id_produk_dikembalikan);
                             $satuanAsli = $detailAsli ? strtoupper($detailAsli->satuan_saat_jual) : strtoupper($detRetur->produkDikembalikan->satuan);
                             $hargaAsli = $detailAsli ? $detailAsli->harga_satuan : 0;
@@ -210,7 +218,10 @@
                         <div class="rounded-xl border border-slate-200 overflow-hidden">
                             <div class="flex flex-col md:flex-row">
                                 <div class="flex-1 bg-red-50 p-4">
-                                    <p class="text-[9px] font-bold text-red-500 uppercase tracking-widest mb-2">Dikembalikan</p>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <x-nomor-urut :no="$no" size="sm" tone="bg-red-100 text-red-600" />
+                                        <p class="text-[9px] font-bold text-red-500 uppercase tracking-widest">Dikembalikan</p>
+                                    </div>
                                     <p class="font-bold text-red-700 text-sm">
                                         {{ $detRetur->produkDikembalikan->nama_produk }}
                                         <x-kode-barang :kode="$detRetur->produkDikembalikan->kode_barang" tone="bg-red-600" />
