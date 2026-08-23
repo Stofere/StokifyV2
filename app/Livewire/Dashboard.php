@@ -112,8 +112,11 @@ class Dashboard extends Component
             $this->expandedTransaksiDetail = [];
         } else {
             $this->expandedTransaksiId = $transaksiId;
+            // Query langsung (tidak lewat relasi detailPenjualan), jadi orderBy harus
+            // ditulis ulang di sini agar nomor urut barang sama dengan modal & PDF.
             $this->expandedTransaksiDetail = DetailPenjualan::with('produk')
                 ->where('id_transaksi_penjualan', $transaksiId)
+                ->orderBy('id_detail_penjualan')
                 ->get()
                 ->toArray();
         }

@@ -37,6 +37,8 @@ class TransaksiRetur extends Model
 
     public function detailRetur(): HasMany
     {
-        return $this->hasMany(DetailRetur::class, 'id_retur', 'id_retur');
+        // Urutan wajib deterministik — lihat catatan di TransaksiPenjualan::detailPenjualan().
+        return $this->hasMany(DetailRetur::class, 'id_retur', 'id_retur')
+            ->orderBy('id_detail_retur');
     }
 }

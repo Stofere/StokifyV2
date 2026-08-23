@@ -44,7 +44,11 @@ class TransaksiPenjualan extends Model
 
     public function detailPenjualan(): HasMany
     {
-        return $this->hasMany(DetailPenjualan::class, 'id_transaksi_penjualan', 'id_transaksi_penjualan');
+        // Urutan wajib deterministik: PK ascending = urutan input kasir di keranjang.
+        // Dipakai untuk nomor urut barang di nota (modal, PDF, Excel) — tanpa ini
+        // urutan baris bergantung optimizer dan nomor bisa berbeda antar halaman.
+        return $this->hasMany(DetailPenjualan::class, 'id_transaksi_penjualan', 'id_transaksi_penjualan')
+            ->orderBy('id_detail_penjualan');
     }
 
     public function transaksiRetur(): HasMany
