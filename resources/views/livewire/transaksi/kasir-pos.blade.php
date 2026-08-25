@@ -269,6 +269,7 @@
                             <div class="flex justify-between items-start mb-2">
                                 <div class="pr-6">
                                     <h4 class="font-semibold text-sm text-slate-800 leading-tight">
+                                        <span class="text-slate-400 font-bold tabular-nums">{{ $loop->iteration }}.</span>
                                         {{ $item['nama_produk'] }}
                                         @if(!empty($item['kode_barang']))
                                             <span class="inline-block align-middle ml-1 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-wider text-white {{ $isOwnerRole ? 'bg-blue-pro' : 'bg-sage-dark' }}">[{{ strtoupper($item['kode_barang']) }}]</span>
@@ -415,27 +416,30 @@
                         <h4 class="font-headline font-bold text-sm text-slate-800 p-4 border-b border-slate-100 bg-slate-50">Daftar Barang</h4>
                         <div class="divide-y divide-slate-100 max-h-48 overflow-y-auto">
                             @foreach($keranjang as $item)
-                                <div class="p-3 flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold text-sm text-slate-800">
-                                            {{ $item['nama_produk'] }}
-                                            @if(!empty($item['kode_barang']))
-                                                <span class="inline-block align-middle ml-1 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-wider text-white {{ $isOwnerRole ? 'bg-blue-pro' : 'bg-sage-dark' }}">[{{ strtoupper($item['kode_barang']) }}]</span>
+                                <div class="p-3 flex justify-between items-center gap-3">
+                                    <div class="flex items-start gap-2 min-w-0">
+                                        <x-nomor-urut :no="$loop->iteration" size="sm" class="mt-0.5" />
+                                        <div class="min-w-0">
+                                            <p class="font-semibold text-sm text-slate-800">
+                                                {{ $item['nama_produk'] }}
+                                                @if(!empty($item['kode_barang']))
+                                                    <span class="inline-block align-middle ml-1 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-wider text-white {{ $isOwnerRole ? 'bg-blue-pro' : 'bg-sage-dark' }}">[{{ strtoupper($item['kode_barang']) }}]</span>
+                                                @endif
+                                            </p>
+                                            <p class="text-xs text-slate-500">
+                                                {{ $item['jumlah_jual'] }} {{ $item['tipe_jual'] == 'eceran' ? 'Meter' : strtoupper($item['satuan_utama']) }}
+                                                x Rp {{ number_format($item['harga_terpakai'], 0, ',', '.') }}
+                                            </p>
+                                            {{-- Info potong gudang untuk barang dual-unit yang jual meter --}}
+                                            @if($item['has_eceran'] && $item['tipe_jual'] == 'eceran' && $item['jumlah_potong_gudang'] > 0)
+                                                <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
+                                                    <span class="material-symbols-outlined text-[12px]">scale</span>
+                                                    Potong Gudang: {{ $item['jumlah_potong_gudang'] }} {{ strtoupper($item['satuan_utama']) }}
+                                                </span>
                                             @endif
-                                        </p>
-                                        <p class="text-xs text-slate-500">
-                                            {{ $item['jumlah_jual'] }} {{ $item['tipe_jual'] == 'eceran' ? 'Meter' : strtoupper($item['satuan_utama']) }}
-                                            x Rp {{ number_format($item['harga_terpakai'], 0, ',', '.') }}
-                                        </p>
-                                        {{-- Info potong gudang untuk barang dual-unit yang jual meter --}}
-                                        @if($item['has_eceran'] && $item['tipe_jual'] == 'eceran' && $item['jumlah_potong_gudang'] > 0)
-                                            <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
-                                                <span class="material-symbols-outlined text-[12px]">scale</span>
-                                                Potong Gudang: {{ $item['jumlah_potong_gudang'] }} {{ strtoupper($item['satuan_utama']) }}
-                                            </span>
-                                        @endif
+                                        </div>
                                     </div>
-                                    <p class="font-bold text-slate-800">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</p>
+                                    <p class="font-bold text-slate-800 shrink-0 whitespace-nowrap">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</p>
                                 </div>
                             @endforeach
                         </div>
