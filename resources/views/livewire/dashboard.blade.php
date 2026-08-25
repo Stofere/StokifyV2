@@ -551,7 +551,10 @@
                             <div class="space-y-1.5">
                                 @foreach($logDetailItems as $item)
                                     <div class="flex justify-between items-center gap-2 text-xs bg-slate-50 rounded-lg px-3 py-2">
-                                        <span class="font-semibold text-charcoal min-w-0 truncate">{{ $item['nama'] }}</span>
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <x-nomor-urut :no="$loop->iteration" size="sm" />
+                                            <span class="font-semibold text-charcoal min-w-0 truncate">{{ $item['nama'] }}</span>
+                                        </div>
                                         <div class="flex items-center gap-3 text-slate-500 shrink-0">
                                             <span>{{ $item['jumlah'] }} {{ $item['satuan'] }}</span>
                                             <span class="text-slate-300">×</span>
@@ -593,17 +596,20 @@
                                 @foreach($logDetailItems as $item)
                                     <div class="text-xs bg-slate-50 rounded-lg px-3 py-2">
                                         <div class="flex justify-between items-center gap-2">
-                                            <span class="font-semibold text-charcoal min-w-0 truncate">{{ $item['dikembalikan'] }}</span>
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <x-nomor-urut :no="$loop->iteration" size="sm" />
+                                                <span class="font-semibold text-charcoal min-w-0 truncate">{{ $item['dikembalikan'] }}</span>
+                                            </div>
                                             <span class="text-slate-500 shrink-0">{{ $item['jumlah'] }} pcs</span>
                                         </div>
                                         @if(!empty($item['pengganti']))
-                                            <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                                            <p class="text-[11px] text-slate-500 mt-1 pl-7 flex items-center gap-1">
                                                 <span class="material-symbols-outlined text-[13px] text-blue-pro">swap_horiz</span>
                                                 Diganti: <span class="font-semibold text-charcoal">{{ $item['pengganti'] }}</span>
                                             </p>
                                         @endif
                                         @if(!empty($item['kondisi']))
-                                            <p class="text-[10px] text-slate-400 mt-0.5">Kondisi: {{ $item['kondisi'] }}</p>
+                                            <p class="text-[10px] text-slate-400 mt-0.5 pl-7">Kondisi: {{ $item['kondisi'] }}</p>
                                         @endif
                                     </div>
                                 @endforeach
