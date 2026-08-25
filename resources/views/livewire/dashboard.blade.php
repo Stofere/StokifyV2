@@ -416,12 +416,12 @@
                                                 <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 mb-2">Detail Barang — {{ $trx->tanggal_transaksi->translatedFormat('d M Y, H:i') }}</p>
                                                 <div class="space-y-1.5">
                                                     @foreach($expandedTransaksiDetail as $detail)
-                                                        <div class="flex justify-between items-center text-xs bg-white rounded-lg px-3 py-2">
-                                                            <div class="flex items-center gap-2">
-                                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-pro shrink-0"></span>
-                                                                <span class="font-semibold text-charcoal">{{ $detail['produk']['nama_produk'] ?? '-' }}</span>
+                                                        <div class="flex justify-between items-center gap-3 text-xs bg-white rounded-lg px-3 py-2">
+                                                            <div class="flex items-center gap-2 min-w-0">
+                                                                <x-nomor-urut :no="$loop->iteration" size="sm" />
+                                                                <span class="font-semibold text-charcoal truncate">{{ $detail['produk']['nama_produk'] ?? '-' }}</span>
                                                             </div>
-                                                            <div class="flex items-center gap-4 text-slate-500">
+                                                            <div class="flex items-center gap-4 text-slate-500 shrink-0">
                                                                 <span>{{ fmod((float)$detail['jumlah'], 1) == 0 ? (int)$detail['jumlah'] : $detail['jumlah'] }} {{ $detail['satuan_saat_jual'] }}</span>
                                                                 <span class="text-slate-300">×</span>
                                                                 <span>Rp {{ number_format($detail['harga_satuan'], 0, ',', '.') }}</span>

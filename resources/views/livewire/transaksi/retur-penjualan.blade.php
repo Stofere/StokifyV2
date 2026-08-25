@@ -117,13 +117,14 @@
                 <table class="w-full text-left text-sm">
                     <thead>
                         <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 {{ $isOwnerRole ? 'border-b border-slate-100' : 'border-b border-sage/10' }}">
-                            <th class="p-4">Nama Barang</th><th class="p-4 text-center">Beli</th><th class="p-4 text-center text-red-500">Diretur</th><th class="p-4 text-center text-emerald-600">Sisa</th><th class="p-4 text-right">Harga</th><th class="p-4 text-center">Aksi</th>
+                            <th class="px-2 py-4 w-8 text-center">No.</th><th class="p-4">Nama Barang</th><th class="p-4 text-center">Beli</th><th class="p-4 text-center text-red-500">Diretur</th><th class="p-4 text-center text-emerald-600">Sisa</th><th class="p-4 text-right">Harga</th><th class="p-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($notaTerpilih->detailPenjualan as $detail)
                             @php $sisaBisaDiretur = $detail->jumlah - $detail->jumlah_diretur; @endphp
                             <tr class="{{ $sisaBisaDiretur <= 0 ? 'opacity-40' : '' }} {{ $isOwnerRole ? 'hover:bg-slate-50 border-b border-slate-50' : 'hover:bg-sage-light/20 border-b border-sage/5' }} transition-colors">
+                                <td class="px-2 py-4 text-center text-slate-400 font-semibold tabular-nums">{{ $loop->iteration }}</td>
                                 <td class="p-4 font-semibold text-slate-700">
                                     {{ $detail->produk->nama_produk }}
                                     <x-kode-barang :kode="$detail->produk->kode_barang" :owner="$isOwnerRole" />
