@@ -56,7 +56,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th width="50%">Nama Barang & SKU</th>
+                        <th width="6%" class="text-center" style="padding-left:4px; padding-right:4px;">No</th>
+                        <th width="44%">Nama Barang & SKU</th>
                         <th width="15%" class="text-center">Qty</th>
                         <th width="15%" class="text-right">Harga Satuan</th>
                         <th width="20%" class="text-right">Subtotal</th>
@@ -64,7 +65,9 @@
                 </thead>
                 <tbody>
                     @foreach($trx->detailPenjualan as $det)
+                    @php $noItem = $loop->iteration; @endphp
                     <tr>
+                        <td class="text-center" style="padding-left:4px; padding-right:4px; color:#7f8c8d;">{{ $noItem }}</td>
                         <td>
                             <strong>{{ $det->produk->nama_produk }}</strong><br>
                             <span style="font-size: 8px; color:#7f8c8d; font-family: monospace;">{{ $det->produk->kode_barang }}</span>
@@ -102,7 +105,7 @@
                     </tr>
                     @endforeach
                     <tr class="total-row">
-                        <td colspan="3" class="text-right">TOTAL TRANSAKSI INI:</td>
+                        <td colspan="4" class="text-right">TOTAL TRANSAKSI INI:</td>
                         <td class="text-right">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
                     </tr>
                 </tbody>

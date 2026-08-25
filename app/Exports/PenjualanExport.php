@@ -31,6 +31,7 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
 
         foreach ($this->dataTransaksi as $trx) {
             $isFirst = true;
+            $itemNo = 1;
             $grandTotal += $trx->total_harga;
 
             foreach ($trx->detailPenjualan as $det) {
@@ -38,6 +39,7 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
 
                 $rows->push([
                     $isFirst ? $nomor : '',
+                    $itemNo++,
                     $isFirst ? \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d/m/Y H:i') : '',
                     $isFirst ? $trx->kode_nota : '',
                     $isFirst ? ($trx->pelanggan->nama ?? 'Umum') : '',
@@ -57,7 +59,7 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
         }
 
         // Grand total row
-        $rows->push(['', '', '', '', '', '', '', '', '', 'TOTAL OMZET:', $grandTotal]);
+        $rows->push(['', '', '', '', '', '', '', '', '', '', 'TOTAL OMZET:', $grandTotal]);
 
         return $rows;
     }
@@ -65,7 +67,7 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
     public function headings(): array
     {
         return [
-            'No', 'Waktu', 'Nota', 'Pelanggan', 'Sales',
+            'No', 'No. Item', 'Waktu', 'Nota', 'Pelanggan', 'Sales',
             'Nama Barang', 'SKU', 'Qty', 'Harga Satuan', 'Subtotal', 'Total Transaksi',
         ];
     }
@@ -73,15 +75,15 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
     public function columnWidths(): array
     {
         return [
-            'A' => 5, 'B' => 18, 'C' => 18, 'D' => 18, 'E' => 15,
-            'F' => 30, 'G' => 15, 'H' => 12, 'I' => 15, 'J' => 15, 'K' => 18,
+            'A' => 5, 'B' => 7, 'C' => 18, 'D' => 18, 'E' => 18, 'F' => 15,
+            'G' => 30, 'H' => 15, 'I' => 12, 'J' => 15, 'K' => 15, 'L' => 18,
         ];
     }
 
     public function styles(Worksheet $sheet): array
     {
         // Title row
-        $sheet->mergeCells('A1:K1');
+        $sheet->mergeCells('A1:L1');
         $sheet->setCellValue('A1', "LAPORAN PENJUALAN — Periode: {$this->judulPeriode} | Cetak: {$this->tanggalCetak}");
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
@@ -90,10 +92,10 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
 
         // Format kolom currency
         $highestRow = $sheet->getHighestRow();
-        $sheet->getStyle("I3:K{$highestRow}")->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle("J3:L{$highestRow}")->getNumberFormat()->setFormatCode('#,##0');
 
         // Grand total row styling
-        $sheet->getStyle("A{$highestRow}:K{$highestRow}")->applyFromArray([
+        $sheet->getStyle("A{$highestRow}:L{$highestRow}")->applyFromArray([
             'font' => ['bold' => true, 'size' => 11],
             'borders' => ['top' => ['borderStyle' => 'double']],
         ]);

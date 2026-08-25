@@ -88,9 +88,11 @@ class Penjualan extends Component
             
             $teks .= "👤 {$namaPelanggan} from {$namaSales}\n";
             
+            $noItem = 1;
             foreach ($trx->detailPenjualan as $det) {
                 $qty = fmod($det->jumlah, 1) == 0 ? (int)$det->jumlah : $det->jumlah;
-                $teks .= "- {$qty} {$det->satuan_saat_jual} - {$det->produk->nama_produk} - {$det->produk->kode_barang}\n";
+                $teks .= "{$noItem}. {$qty} {$det->satuan_saat_jual} - {$det->produk->nama_produk} - {$det->produk->kode_barang}\n";
+                $noItem++;
             }
             $teks .= "-----------------------------\n";
         }
