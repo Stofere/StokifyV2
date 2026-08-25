@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\PenjualanExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class Penjualan extends Component
 {
@@ -20,6 +21,38 @@ class Penjualan extends Component
     // STATE MODAL DETAIL NOTA
     public $modal_open = false;
     public $detail_nota = null;
+
+    /**
+     * Peran ADMIN tidak boleh melihat angka rupiah maupun periode agregat
+     * (bulanan/tahunan) — hanya OWNER. Dipakai sebagai satu-satunya sumber
+     * kebenaran oleh getQuery(), cetakPdf(), exportExcel(), dan view.
+     */
+    public function bolehLihatUang(): bool
+    {
+        return Auth::user()?->peran === 'OWNER';
+    }
+
+    /**
+     * Tipe filter yang benar-benar dipakai. Properti $tipe_filter terikat
+     * wire:model.live sehingga bisa diubah dari browser; nilainya TIDAK boleh
+     * dipercaya. Non-OWNER selalu dipaksa ke 'harian'.
+     */
+    public function tipeFilterEfektif(): string
+    {
+        if (! $this->bolehLihatUang()) {
+            return 'harian';
+        }
+
+        return in_array($this->tipe_filter, ['harian', 'bulanan', 'tahunan'], true)
+            ? $this->tipe_filter
+            : 'harian';
+    }
+
+    /** Kembalikan properti ke nilai sah bila klien mencoba mengubahnya. */
+    public function updatedTipeFilter(): void
+    {
+        $this->tipe_filter = $this->tipeFilterEfektif();
+    }
 
     public function mount()
     {
@@ -34,12 +67,14 @@ class Penjualan extends Component
                     ->withCount('riwayatKoreksi')
                     ->where('status_penjualan', '!=', 'DIBATALKAN');
 
-        if ($this->tipe_filter === 'harian') {
+        $tipe = $this->tipeFilterEfektif();
+
+        if ($tipe === 'harian') {
             $query->whereDate('tanggal_transaksi', $this->filter_tanggal);
-        } elseif ($this->tipe_filter === 'bulanan') {
+        } elseif ($tipe === 'bulanan') {
             $query->whereMonth('tanggal_transaksi', $this->filter_bulan)
                   ->whereYear('tanggal_transaksi', $this->filter_tahun);
-        } elseif ($this->tipe_filter === 'tahunan') {
+        } elseif ($tipe === 'tahunan') {
             $query->whereYear('tanggal_transaksi', $this->filter_tahun);
         }
 
@@ -75,7 +110,7 @@ class Penjualan extends Component
 
     public function generateRekapTeks()
     {
-        if ($this->tipe_filter !== 'harian') return;
+        if ($this->tipeFilterEfektif() !== 'harian') return;
 
         $transaksis = $this->getQuery();
         $tanggalFormat = \Carbon\Carbon::parse($this->filter_tanggal)->locale('id')->isoFormat('dddd, D MMMM YYYY');;
@@ -108,15 +143,17 @@ class Penjualan extends Component
     {
         $dataTransaksi = $this->getQuery();
         
+        $tipe = $this->tipeFilterEfektif();
         $judulPeriode = '';
-        if ($this->tipe_filter === 'harian') $judulPeriode = Carbon::parse($this->filter_tanggal)->translatedFormat('d F Y');
-        if ($this->tipe_filter === 'bulanan') $judulPeriode = Carbon::create(null, $this->filter_bulan)->translatedFormat('F') . ' ' . $this->filter_tahun;
-        if ($this->tipe_filter === 'tahunan') $judulPeriode = "Tahun " . $this->filter_tahun;
+        if ($tipe === 'harian') $judulPeriode = Carbon::parse($this->filter_tanggal)->translatedFormat('d F Y');
+        if ($tipe === 'bulanan') $judulPeriode = Carbon::create(null, $this->filter_bulan)->translatedFormat('F') . ' ' . $this->filter_tahun;
+        if ($tipe === 'tahunan') $judulPeriode = "Tahun " . $this->filter_tahun;
 
         $pdf = Pdf::loadView('pdf.laporan-penjualan', [
             'dataTransaksi' => $dataTransaksi,
             'judulPeriode' => $judulPeriode,
-            'tanggalCetak' => now()->translatedFormat('d F Y H:i')
+            'tanggalCetak' => now()->translatedFormat('d F Y H:i'),
+            'tampilkanUang' => $this->bolehLihatUang(),
         ]);
 
         return response()->streamDownload(function () use ($pdf) {
@@ -128,13 +165,14 @@ class Penjualan extends Component
     {
         $dataTransaksi = $this->getQuery();
 
+        $tipe = $this->tipeFilterEfektif();
         $judulPeriode = '';
-        if ($this->tipe_filter === 'harian') $judulPeriode = Carbon::parse($this->filter_tanggal)->translatedFormat('d F Y');
-        if ($this->tipe_filter === 'bulanan') $judulPeriode = Carbon::create(null, $this->filter_bulan)->translatedFormat('F') . ' ' . $this->filter_tahun;
-        if ($this->tipe_filter === 'tahunan') $judulPeriode = "Tahun " . $this->filter_tahun;
+        if ($tipe === 'harian') $judulPeriode = Carbon::parse($this->filter_tanggal)->translatedFormat('d F Y');
+        if ($tipe === 'bulanan') $judulPeriode = Carbon::create(null, $this->filter_bulan)->translatedFormat('F') . ' ' . $this->filter_tahun;
+        if ($tipe === 'tahunan') $judulPeriode = "Tahun " . $this->filter_tahun;
 
         return Excel::download(
-            new PenjualanExport($dataTransaksi, $judulPeriode, now()->translatedFormat('d F Y H:i')),
+            new PenjualanExport($dataTransaksi, $judulPeriode, now()->translatedFormat('d F Y H:i'), $this->bolehLihatUang()),
             'Laporan_Penjualan_' . $judulPeriode . '.xlsx'
         );
     }

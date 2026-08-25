@@ -5,6 +5,7 @@
     'closeAction',            // nama method Livewire untuk menutup modal (wajib)
     'koreksiAction' => null,  // nama method untuk tombol Koreksi qty (null = sembunyikan tombol)
     'returLinkAction' => null, // nama method untuk navigasi silang nota POS <-> RETUR (null = teks biasa)
+    'uang' => true,           // false = sembunyikan semua angka rupiah (harga, subtotal, total)
 ])
 
 @php
@@ -58,14 +59,16 @@
 
                 <h4 class="font-semibold text-sm text-slate-700 mb-2 border-b pb-2 border-slate-100">Daftar Barang</h4>
                 <div class="overflow-x-auto">
-                <table class="w-full min-w-130 text-left text-sm">
+                <table class="w-full text-left text-sm {{ $uang ? 'min-w-130' : 'min-w-80' }}">
                     <thead>
                         <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100">
                             <th class="px-2 py-3 w-8 text-center">No.</th>
                             <th class="p-3">Barang</th>
                             <th class="p-3 text-center">Qty</th>
-                            <th class="p-3 text-right">Harga</th>
-                            <th class="p-3 text-right">Subtotal</th>
+                            @if($uang)
+                                <th class="p-3 text-right">Harga</th>
+                                <th class="p-3 text-right">Subtotal</th>
+                            @endif
                             @if($koreksiAction)<th class="p-3 text-center">Aksi</th>@endif
                         </tr>
                     </thead>
@@ -128,8 +131,10 @@
                                         <span class="block text-[9px] text-amber-600 font-semibold mt-0.5">{{ $fmt($det->jumlah_potong_gudang) }} KG ditimbang</span>
                                     @endif
                                 </td>
-                                <td class="p-3 text-right text-gray-600 align-top">Rp {{ number_format($det->harga_satuan, 0, ',', '.') }}<span class="text-[9px] text-slate-400 block">/{{ $det->satuan_saat_jual }}</span></td>
-                                <td class="p-3 text-right font-bold text-green-700 align-top">Rp {{ number_format($det->subtotal, 0, ',', '.') }}</td>
+                                @if($uang)
+                                    <td class="p-3 text-right text-gray-600 align-top">Rp {{ number_format($det->harga_satuan, 0, ',', '.') }}<span class="text-[9px] text-slate-400 block">/{{ $det->satuan_saat_jual }}</span></td>
+                                    <td class="p-3 text-right font-bold text-green-700 align-top">Rp {{ number_format($det->subtotal, 0, ',', '.') }}</td>
+                                @endif
                                 @if($koreksiAction)
                                     <td class="p-3 text-center align-top">
                                         <button wire:click="{{ $koreksiAction }}({{ $det->id_detail_penjualan }})"
@@ -142,14 +147,16 @@
                             </tr>
                         @endforeach
                     </tbody>
-                    <tfoot>
-                        <tr class="bg-slate-50">
-                            {{-- colspan mengikuti jumlah kolom sebelum Subtotal: No. + Barang + Qty + Harga --}}
-                            <td colspan="4" class="p-3 text-right font-bold text-slate-500 uppercase text-xs">Total:</td>
-                            <td class="p-3 text-right font-headline font-bold text-lg text-emerald-600">Rp {{ number_format($nota->total_harga, 0, ',', '.') }}</td>
-                            @if($koreksiAction)<td></td>@endif
-                        </tr>
-                    </tfoot>
+                    @if($uang)
+                        <tfoot>
+                            <tr class="bg-slate-50">
+                                {{-- colspan mengikuti jumlah kolom sebelum Subtotal: No. + Barang + Qty + Harga --}}
+                                <td colspan="4" class="p-3 text-right font-bold text-slate-500 uppercase text-xs">Total:</td>
+                                <td class="p-3 text-right font-headline font-bold text-lg text-emerald-600">Rp {{ number_format($nota->total_harga, 0, ',', '.') }}</td>
+                                @if($koreksiAction)<td></td>@endif
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
                 </div>
 
@@ -228,7 +235,9 @@
                                     </p>
                                     <div class="mt-2 space-y-1 text-xs text-slate-600">
                                         <p>Jumlah: <strong class="text-red-600">{{ $fmt($detRetur->jumlah) }} {{ $satuanAsli }}</strong></p>
-                                        <p>Harga Nota: <strong>Rp {{ number_format($hargaAsli, 0, ',', '.') }}</strong> /{{ $satuanAsli }}</p>
+                                        @if($uang)
+                                            <p>Harga Nota: <strong>Rp {{ number_format($hargaAsli, 0, ',', '.') }}</strong> /{{ $satuanAsli }}</p>
+                                        @endif
                                         <p>Kondisi: <span class="font-bold px-1.5 py-0.5 rounded text-[10px] {{ $detRetur->kondisi_barang_dikembalikan === 'BAGUS' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">{{ $detRetur->kondisi_barang_dikembalikan }}</span></p>
                                     </div>
                                 </div>
@@ -249,9 +258,9 @@
                             @if($detRetur->subtotal_biaya != 0)
                                 <div class="px-4 py-2 {{ $detRetur->subtotal_biaya > 0 ? 'bg-amber-50 border-t border-amber-200' : 'bg-emerald-50 border-t border-emerald-200' }} text-xs font-bold">
                                     @if($detRetur->subtotal_biaya > 0)
-                                        <span class="text-amber-700">Pelanggan Menambah: Rp {{ number_format(abs($detRetur->subtotal_biaya), 0, ',', '.') }}</span>
+                                        <span class="text-amber-700">Pelanggan Menambah{{ $uang ? ': Rp ' . number_format(abs($detRetur->subtotal_biaya), 0, ',', '.') : '' }}</span>
                                     @else
-                                        <span class="text-emerald-700">Toko Mengembalikan: Rp {{ number_format(abs($detRetur->subtotal_biaya), 0, ',', '.') }}</span>
+                                        <span class="text-emerald-700">Toko Mengembalikan{{ $uang ? ': Rp ' . number_format(abs($detRetur->subtotal_biaya), 0, ',', '.') : '' }}</span>
                                     @endif
                                 </div>
                             @endif
@@ -260,13 +269,13 @@
                 </div>
 
                 <div class="mt-5 p-4 rounded-xl {{ $nota->total_biaya_retur > 0 ? 'bg-amber-50 border-2 border-amber-200' : ($nota->total_biaya_retur < 0 ? 'bg-emerald-50 border-2 border-emerald-200' : 'bg-slate-50 border-2 border-slate-200') }}">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Selisih Biaya Retur</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ $uang ? 'Total Selisih Biaya Retur' : 'Hasil Retur' }}</p>
                     @if($nota->total_biaya_retur > 0)
-                        <p class="font-headline text-xl font-bold text-amber-700">Pelanggan Menambah: Rp {{ number_format(abs($nota->total_biaya_retur), 0, ',', '.') }}</p>
+                        <p class="font-headline text-xl font-bold text-amber-700">Pelanggan Menambah{{ $uang ? ': Rp ' . number_format(abs($nota->total_biaya_retur), 0, ',', '.') : '' }}</p>
                     @elseif($nota->total_biaya_retur < 0)
-                        <p class="font-headline text-xl font-bold text-emerald-700">Toko Mengembalikan: Rp {{ number_format(abs($nota->total_biaya_retur), 0, ',', '.') }}</p>
+                        <p class="font-headline text-xl font-bold text-emerald-700">Toko Mengembalikan{{ $uang ? ': Rp ' . number_format(abs($nota->total_biaya_retur), 0, ',', '.') : '' }}</p>
                     @else
-                        <p class="font-headline text-xl font-bold text-slate-600">Tukar Guling (Rp 0)</p>
+                        <p class="font-headline text-xl font-bold text-slate-600">Tukar Guling{{ $uang ? ' (Rp 0)' : '' }}</p>
                     @endif
                 </div>
             @endif

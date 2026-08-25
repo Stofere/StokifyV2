@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Support\Collection;
 
 class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithTitle
@@ -15,12 +16,42 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
     protected $dataTransaksi;
     protected string $judulPeriode;
     protected string $tanggalCetak;
+    protected bool $tampilkanUang;
 
-    public function __construct($dataTransaksi, string $judulPeriode, string $tanggalCetak)
+    public function __construct($dataTransaksi, string $judulPeriode, string $tanggalCetak, bool $tampilkanUang = true)
     {
         $this->dataTransaksi = $dataTransaksi;
         $this->judulPeriode = $judulPeriode;
         $this->tanggalCetak = $tanggalCetak;
+        $this->tampilkanUang = $tampilkanUang;
+    }
+
+    /**
+     * Definisi kolom [judul, lebar] sebagai satu sumber kebenaran.
+     * Huruf kolom untuk styles() diturunkan dari jumlahnya, bukan di-hardcode —
+     * kalau tidak, perubahan jumlah kolom akan salah format tanpa error.
+     * Peran non-OWNER tidak mendapat kolom rupiah sama sekali.
+     */
+    private function kolom(): array
+    {
+        $kolom = [
+            ['No', 5], ['No. Item', 7], ['Waktu', 18], ['Nota', 18],
+            ['Pelanggan', 18], ['Sales', 15], ['Nama Barang', 30], ['SKU', 15], ['Qty', 12],
+        ];
+
+        if ($this->tampilkanUang) {
+            $kolom[] = ['Harga Satuan', 15];
+            $kolom[] = ['Subtotal', 15];
+            $kolom[] = ['Total Transaksi', 18];
+        }
+
+        return $kolom;
+    }
+
+    /** Huruf kolom terakhir, mis. 'L' untuk 12 kolom. */
+    private function kolomTerakhir(): string
+    {
+        return Coordinate::stringFromColumnIndex(count($this->kolom()));
     }
 
     public function collection(): Collection
@@ -37,7 +68,7 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
             foreach ($trx->detailPenjualan as $det) {
                 $qty = fmod($det->jumlah, 1) == 0 ? (int)$det->jumlah : $det->jumlah;
 
-                $rows->push([
+                $baris = [
                     $isFirst ? $nomor : '',
                     $itemNo++,
                     $isFirst ? \Carbon\Carbon::parse($trx->tanggal_transaksi)->format('d/m/Y H:i') : '',
@@ -47,10 +78,15 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
                     $det->produk->nama_produk,
                     $det->produk->kode_barang,
                     $qty . ' ' . strtoupper($det->satuan_saat_jual),
-                    $det->harga_satuan,
-                    $det->subtotal,
-                    $isFirst ? $trx->total_harga : '',
-                ]);
+                ];
+
+                if ($this->tampilkanUang) {
+                    $baris[] = $det->harga_satuan;
+                    $baris[] = $det->subtotal;
+                    $baris[] = $isFirst ? $trx->total_harga : '';
+                }
+
+                $rows->push($baris);
 
                 $isFirst = false;
             }
@@ -58,32 +94,39 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
             $nomor++;
         }
 
-        // Grand total row
-        $rows->push(['', '', '', '', '', '', '', '', '', '', 'TOTAL OMZET:', $grandTotal]);
+        // Grand total hanya untuk peran yang boleh melihat uang
+        if ($this->tampilkanUang) {
+            $jml = count($this->kolom());
+            $baris = array_fill(0, $jml, '');
+            $baris[$jml - 2] = 'TOTAL OMZET:';
+            $baris[$jml - 1] = $grandTotal;
+            $rows->push($baris);
+        }
 
         return $rows;
     }
 
     public function headings(): array
     {
-        return [
-            'No', 'No. Item', 'Waktu', 'Nota', 'Pelanggan', 'Sales',
-            'Nama Barang', 'SKU', 'Qty', 'Harga Satuan', 'Subtotal', 'Total Transaksi',
-        ];
+        return array_column($this->kolom(), 0);
     }
 
     public function columnWidths(): array
     {
-        return [
-            'A' => 5, 'B' => 7, 'C' => 18, 'D' => 18, 'E' => 18, 'F' => 15,
-            'G' => 30, 'H' => 15, 'I' => 12, 'J' => 15, 'K' => 15, 'L' => 18,
-        ];
+        $lebar = [];
+        foreach ($this->kolom() as $i => [$judul, $w]) {
+            $lebar[Coordinate::stringFromColumnIndex($i + 1)] = $w;
+        }
+
+        return $lebar;
     }
 
     public function styles(Worksheet $sheet): array
     {
         // Title row
-        $sheet->mergeCells('A1:L1');
+        $akhir = $this->kolomTerakhir();
+
+        $sheet->mergeCells("A1:{$akhir}1");
         $sheet->setCellValue('A1', "LAPORAN PENJUALAN — Periode: {$this->judulPeriode} | Cetak: {$this->tanggalCetak}");
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
@@ -92,10 +135,14 @@ class PenjualanExport implements FromCollection, WithHeadings, WithStyles, WithC
 
         // Format kolom currency
         $highestRow = $sheet->getHighestRow();
-        $sheet->getStyle("J3:L{$highestRow}")->getNumberFormat()->setFormatCode('#,##0');
+        if ($this->tampilkanUang) {
+            // Tiga kolom rupiah selalu di paling kanan
+            $awalUang = Coordinate::stringFromColumnIndex(count($this->kolom()) - 2);
+            $sheet->getStyle("{$awalUang}3:{$akhir}{$highestRow}")->getNumberFormat()->setFormatCode('#,##0');
+        }
 
         // Grand total row styling
-        $sheet->getStyle("A{$highestRow}:L{$highestRow}")->applyFromArray([
+        $sheet->getStyle("A{$highestRow}:{$akhir}{$highestRow}")->applyFromArray([
             'font' => ['bold' => true, 'size' => 11],
             'borders' => ['top' => ['borderStyle' => 'double']],
         ]);

@@ -35,9 +35,11 @@
         <p>Periode Laporan: <strong>{{ $judulPeriode }}</strong> | Dicetak Pada: {{ $tanggalCetak }}</p>
     </div>
 
-    @php 
-        $grandTotalOmset = 0; 
+    @php
+        $grandTotalOmset = 0;
         $nomorUrut = 1;
+        // Peran non-OWNER: laporan dicetak tanpa angka rupiah sama sekali.
+        $tampilkanUang = $tampilkanUang ?? true;
     @endphp
 
     @forelse($dataTransaksi as $trx)
@@ -57,10 +59,12 @@
                 <thead>
                     <tr>
                         <th width="6%" class="text-center" style="padding-left:4px; padding-right:4px;">No</th>
-                        <th width="44%">Nama Barang & SKU</th>
-                        <th width="15%" class="text-center">Qty</th>
-                        <th width="15%" class="text-right">Harga Satuan</th>
-                        <th width="20%" class="text-right">Subtotal</th>
+                        <th width="{{ $tampilkanUang ? '44%' : '74%' }}">Nama Barang & SKU</th>
+                        <th width="20%" class="text-center">Qty</th>
+                        @if($tampilkanUang)
+                            <th width="15%" class="text-right">Harga Satuan</th>
+                            <th width="15%" class="text-right">Subtotal</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -100,14 +104,18 @@
                                 <br><span style="font-size: 8px; color: #d35400;">⚖ {{ $det->jumlah_potong_gudang }} KG</span>
                             @endif
                         </td>
-                        <td class="text-right">Rp {{ number_format($det->harga_satuan, 0, ',', '.') }}<br><span style="font-size: 8px; color: #7f8c8d;">/{{ $det->satuan_saat_jual }}</span></td>
-                        <td class="text-right">Rp {{ number_format($det->subtotal, 0, ',', '.') }}</td>
+                        @if($tampilkanUang)
+                            <td class="text-right">Rp {{ number_format($det->harga_satuan, 0, ',', '.') }}<br><span style="font-size: 8px; color: #7f8c8d;">/{{ $det->satuan_saat_jual }}</span></td>
+                            <td class="text-right">Rp {{ number_format($det->subtotal, 0, ',', '.') }}</td>
+                        @endif
                     </tr>
                     @endforeach
-                    <tr class="total-row">
-                        <td colspan="4" class="text-right">TOTAL TRANSAKSI INI:</td>
-                        <td class="text-right">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
-                    </tr>
+                    @if($tampilkanUang)
+                        <tr class="total-row">
+                            <td colspan="4" class="text-right">TOTAL TRANSAKSI INI:</td>
+                            <td class="text-right">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -117,7 +125,7 @@
         </div>
     @endforelse
 
-    @if(count($dataTransaksi) > 0)
+    @if($tampilkanUang && count($dataTransaksi) > 0)
     <div class="grand-total">
         TOTAL OMZET KOTOR (PERIODE INI): <strong style="color: #27ae60;">Rp {{ number_format($grandTotalOmset, 0, ',', '.') }}</strong>
     </div>

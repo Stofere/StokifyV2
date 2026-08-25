@@ -1,4 +1,9 @@
-@php $isOwnerRole = Auth::user()->peran === 'OWNER'; @endphp
+@php
+    $isOwnerRole = Auth::user()->peran === 'OWNER';
+    // Sumber kebenaran ada di komponen; view hanya mencerminkannya.
+    $bolehUang = $this->bolehLihatUang();
+    $tipeAktif = $this->tipeFilterEfektif();
+@endphp
 <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 fade-in">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
         <div>
@@ -13,19 +18,21 @@
             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipe Laporan</label>
             <select wire:model.live="tipe_filter" class="border-gray-300 rounded-lg p-2.5 text-sm font-bold bg-gray-50 focus:ring-blue-500">
                 <option value="harian">Laporan Harian (Rekap WA)</option>
-                <option value="bulanan">Laporan Bulanan</option>
-                <option value="tahunan">Laporan Tahunan</option>
+                @if($bolehUang)
+                    <option value="bulanan">Laporan Bulanan</option>
+                    <option value="tahunan">Laporan Tahunan</option>
+                @endif
             </select>
         </div>
 
-        @if($tipe_filter === 'harian')
+        @if($tipeAktif === 'harian')
             <div> 
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Pilih Tanggal</label>
                 <input type="date" wire:model.live="filter_tanggal" class="border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500">
             </div>
         @endif
 
-        @if($tipe_filter === 'bulanan')
+        @if($tipeAktif === 'bulanan')
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Pilih Bulan</label>
                 <select wire:model.live="filter_bulan" class="border-gray-300 rounded-lg p-2.5 text-sm focus:ring-blue-500">
@@ -34,7 +41,7 @@
             </div>
         @endif
 
-        @if(in_array($tipe_filter, ['bulanan', 'tahunan']))
+        @if(in_array($tipeAktif, ['bulanan', 'tahunan']))
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Pilih Tahun</label>
                 <input type="number" wire:model.live="filter_tahun" class="border-gray-300 rounded-lg p-2.5 text-sm w-24 focus:ring-blue-500">
@@ -54,7 +61,7 @@
     </div>
 
      <!-- TAMPILAN KHUSUS HARIAN: TEXT BOX COPY-PASTE UNTUK BOS -->
-    @if($tipe_filter === 'harian')
+    @if($tipeAktif === 'harian')
         <!-- x-data untuk mengelola state tombol Copy via Alpine.js -->
         <div x-data="{ copied: false }" class="rounded-2xl shadow-lg p-6 {{ $isOwnerRole ? 'bg-gradient-to-r from-blue-900 to-indigo-900' : 'bg-gradient-to-r from-sage-dark to-sage' }}">
             
@@ -98,7 +105,7 @@
                     <th class="p-4 font-bold text-center w-12">No</th>
                     <th class="p-4 font-bold">Waktu</th>
                     <th class="p-4 font-bold">Pelanggan & Sales</th>
-                    <th class="p-4 font-bold text-right">Total Uang</th>
+                    @if($bolehUang)<th class="p-4 font-bold text-right">Total Uang</th>@endif
                     <th class="p-4 font-bold text-center w-40">Aksi</th>
                 </tr>
             </thead>
@@ -127,9 +134,11 @@
                             <p class="font-bold {{ $isOwnerRole ? 'text-blue-700' : 'text-sage-dark' }}">{{ $trx->pelanggan->nama ?? 'Umum' }}</p>
                             <p class="text-xs text-gray-500 mt-1">Sales: {{ $trx->marketing->nama ?? '-' }}</p>
                         </td>
-                        <td class="p-4 text-right font-black text-green-700 text-base">
-                            Rp {{ number_format($trx->total_harga, 0, ',', '.') }}
-                        </td>
+                        @if($bolehUang)
+                            <td class="p-4 text-right font-black text-green-700 text-base">
+                                Rp {{ number_format($trx->total_harga, 0, ',', '.') }}
+                            </td>
+                        @endif
                         <td class="p-4 text-center">
                             <button wire:click="lihatDetail({{ $trx->id_transaksi_penjualan }})" class="px-3 py-1.5 rounded-lg font-bold text-xs transition-colors shadow-sm {{ $isOwnerRole ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white' : 'bg-sage-light text-sage-dark hover:bg-sage hover:text-white' }}">
                                 Lihat Rincian
@@ -137,7 +146,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold">Tidak ada transaksi di periode ini.</td></tr>
+                    <tr><td colspan="{{ $bolehUang ? 5 : 4 }}" class="p-10 text-center text-gray-400 font-bold">Tidak ada transaksi di periode ini.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -152,6 +161,7 @@
             :nota="$detail_nota"
             tipe="POS"
             :owner="false"
+            :uang="$bolehUang"
             close-action="tutupModal" />
     @endif
 </div>
