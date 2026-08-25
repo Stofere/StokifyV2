@@ -383,7 +383,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            @forelse($marketingDrilldownData as $trx)
+                            @forelse($this->marketingDrilldown as $trx)
                                 <tr class="hover:bg-slate-50/50 transition-colors {{ $expandedTransaksiId == $trx->id_transaksi_penjualan ? 'bg-blue-50/50' : '' }}">
                                     <td class="px-3 py-2.5 font-semibold text-charcoal whitespace-nowrap">
                                         {{ $trx->tanggal_transaksi->translatedFormat('d M Y, H:i') }}
@@ -409,23 +409,23 @@
                                     </td>
                                 </tr>
                                 {{-- Expanded Detail Row --}}
-                                @if($expandedTransaksiId == $trx->id_transaksi_penjualan && count($expandedTransaksiDetail) > 0)
+                                @if($expandedTransaksiId == $trx->id_transaksi_penjualan && $this->expandedDetail->isNotEmpty())
                                     <tr>
                                         <td colspan="{{ $isOwner ? 4 : 3 }}" class="p-0">
                                             <div class="bg-slate-50 border-l-4 border-blue-pro px-5 py-3">
                                                 <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 mb-2">Detail Barang — {{ $trx->tanggal_transaksi->translatedFormat('d M Y, H:i') }}</p>
                                                 <div class="space-y-1.5">
-                                                    @foreach($expandedTransaksiDetail as $detail)
+                                                    @foreach($this->expandedDetail as $detail)
                                                         <div class="flex justify-between items-center gap-3 text-xs bg-white rounded-lg px-3 py-2">
                                                             <div class="flex items-center gap-2 min-w-0">
                                                                 <x-nomor-urut :no="$loop->iteration" size="sm" />
-                                                                <span class="font-semibold text-charcoal truncate">{{ $detail['produk']['nama_produk'] ?? '-' }}</span>
+                                                                <span class="font-semibold text-charcoal truncate">{{ $detail->produk->nama_produk ?? '-' }}</span>
                                                             </div>
                                                             <div class="flex items-center gap-4 text-slate-500 shrink-0">
-                                                                <span>{{ fmod((float)$detail['jumlah'], 1) == 0 ? (int)$detail['jumlah'] : $detail['jumlah'] }} {{ $detail['satuan_saat_jual'] }}</span>
+                                                                <span>{{ fmod((float) $detail->jumlah, 1) == 0 ? (int) $detail->jumlah : $detail->jumlah }} {{ $detail->satuan_saat_jual }}</span>
                                                                 <span class="text-slate-300">×</span>
-                                                                <span>Rp {{ number_format($detail['harga_satuan'], 0, ',', '.') }}</span>
-                                                                <span class="font-bold text-charcoal">= Rp {{ number_format($detail['subtotal'], 0, ',', '.') }}</span>
+                                                                <span>Rp {{ number_format($detail->harga_satuan, 0, ',', '.') }}</span>
+                                                                <span class="font-bold text-charcoal">= Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</span>
                                                             </div>
                                                         </div>
                                                     @endforeach
@@ -444,11 +444,11 @@
                 </div>
 
                 {{-- Footer Summary (pinned at bottom) --}}
-                @if(count($marketingDrilldownData) > 0)
+                @if($this->marketingDrilldown->isNotEmpty())
                     <div class="px-6 py-3 border-t border-slate-200 flex justify-between items-center shrink-0 bg-slate-50/50 rounded-b-2xl">
-                        <p class="text-xs text-slate-500 font-semibold">Total: <span class="text-charcoal font-bold">{{ count($marketingDrilldownData) }} Nota</span></p>
+                        <p class="text-xs text-slate-500 font-semibold">Total: <span class="text-charcoal font-bold">{{ $this->marketingDrilldown->count() }} Nota</span></p>
                         @if($isOwner)
-                            <p class="text-sm font-headline font-bold text-emerald-600">Rp {{ number_format($marketingDrilldownData->sum('total_harga'), 0, ',', '.') }}</p>
+                            <p class="text-sm font-headline font-bold text-emerald-600">Rp {{ number_format($this->marketingDrilldown->sum('total_harga'), 0, ',', '.') }}</p>
                         @endif
                     </div>
                 @endif

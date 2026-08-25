@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use App\Models\TransaksiPenjualan;
 use App\Models\TransaksiRetur;
 use App\Models\RiwayatStok;
@@ -22,9 +24,12 @@ class Dashboard extends Component
     public $isCustomerModalOpen = false;
 
     public $selectedMarketingName = '';
-    public $marketingDrilldownData = [];
+    // Hanya ID yang disimpan di snapshot. Datanya dihitung ulang lewat #[Computed]
+    // karena EloquentCollectionSynth membuang withCount()/with() saat rehydrate,
+    // yang membuat badge "Dikoreksi" hilang dan kolom Pelanggan jadi N+1.
+    #[Locked]
+    public $selectedMarketingId = null;
     public $expandedTransaksiId = null;
-    public $expandedTransaksiDetail = [];
 
     public $selectedCustomerName = '';
     public $customerDrilldownMarketing = [];
@@ -89,18 +94,44 @@ class Dashboard extends Component
     public function openMarketingModal($marketingId, $marketingName)
     {
         $this->selectedMarketingName = $marketingName;
+        $this->selectedMarketingId = (int) $marketingId;
         $this->expandedTransaksiId = null;
-        $this->expandedTransaksiDetail = [];
+        unset($this->marketingDrilldown, $this->expandedDetail);
 
-        $this->marketingDrilldownData = TransaksiPenjualan::with('pelanggan')
+        $this->isMarketingModalOpen = true;
+    }
+
+    /** Daftar nota milik marketing terpilih. Dihitung ulang tiap request. */
+    #[Computed]
+    public function marketingDrilldown()
+    {
+        if (! $this->selectedMarketingId) {
+            return TransaksiPenjualan::whereRaw('1 = 0')->get();
+        }
+
+        return TransaksiPenjualan::with('pelanggan')
             ->withCount('riwayatKoreksi')
-            ->where('id_marketing', $marketingId)
+            ->where('id_marketing', $this->selectedMarketingId)
             ->whereBetween('tanggal_transaksi', [Carbon::parse($this->startDate)->startOfDay(), Carbon::parse($this->endDate)->endOfDay()])
             ->where('status_penjualan', '!=', 'DIBATALKAN')
             ->orderByDesc('tanggal_transaksi')
             ->get();
-            
-        $this->isMarketingModalOpen = true;
+    }
+
+    /** Rincian barang untuk baris nota yang sedang dibuka. */
+    #[Computed]
+    public function expandedDetail()
+    {
+        if (! $this->expandedTransaksiId) {
+            return DetailPenjualan::whereRaw('1 = 0')->get();
+        }
+
+        // Query langsung (tidak lewat relasi detailPenjualan), jadi orderBy harus
+        // ditulis ulang di sini agar nomor urut barang sama dengan modal & PDF.
+        return DetailPenjualan::with('produk')
+            ->where('id_transaksi_penjualan', $this->expandedTransaksiId)
+            ->orderBy('id_detail_penjualan')
+            ->get();
     }
 
     public function toggleTransaksiDetail($transaksiId)
@@ -109,22 +140,28 @@ class Dashboard extends Component
 
         if ($this->expandedTransaksiId === $transaksiId) {
             $this->expandedTransaksiId = null;
-            $this->expandedTransaksiDetail = [];
-        } else {
-            $this->expandedTransaksiId = $transaksiId;
-            // Query langsung (tidak lewat relasi detailPenjualan), jadi orderBy harus
-            // ditulis ulang di sini agar nomor urut barang sama dengan modal & PDF.
-            $this->expandedTransaksiDetail = DetailPenjualan::with('produk')
-                ->where('id_transaksi_penjualan', $transaksiId)
-                ->orderBy('id_detail_penjualan')
-                ->get()
-                ->toArray();
+            unset($this->expandedDetail);
+
+            return;
         }
+
+        // Hanya nota yang memang ada di daftar drilldown yang sedang terbuka boleh
+        // dibuka rinciannya — id sembarang dari browser tidak boleh membocorkan harga.
+        if (! $this->marketingDrilldown->contains('id_transaksi_penjualan', $transaksiId)) {
+            return;
+        }
+
+        $this->expandedTransaksiId = $transaksiId;
+        unset($this->expandedDetail);
     }
 
     public function closeMarketingModal()
     {
         $this->isMarketingModalOpen = false;
+        $this->selectedMarketingId = null;
+        $this->selectedMarketingName = '';
+        $this->expandedTransaksiId = null;
+        unset($this->marketingDrilldown, $this->expandedDetail);
     }
 
     public function openCustomerModal($customerId, $customerName)
