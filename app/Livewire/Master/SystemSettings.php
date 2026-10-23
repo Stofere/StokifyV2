@@ -5,6 +5,8 @@ namespace App\Livewire\Master;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Setting;
+use App\Services\ImageService;
+use App\Support\AturanGambar;
 
 class SystemSettings extends Component
 {
@@ -20,25 +22,30 @@ class SystemSettings extends Component
 
     public function updatedPosBackgroundImage()
     {
-        $this->validate([
-            'pos_background_image' => 'image|max:10240', // Max 10MB
-        ]);
+        $this->validate($this->aturanBackground(), AturanGambar::messages('pos_background_image'));
     }
 
     public function simpanBackground()
     {
         if ($this->pos_background_image) {
-            $this->validate([
-                'pos_background_image' => 'image|max:10240',
-            ]);
+            $this->validate($this->aturanBackground(), AturanGambar::messages('pos_background_image'));
 
-            $path = $this->pos_background_image->store('pos-backgrounds', 'public');
+            // Di-encode ulang (bukan disimpan apa adanya) dengan nama acak buatan server
+            $path = app(ImageService::class)->simpanBackgroundPos($this->pos_background_image);
+            $this->pos_background_image->delete();
+
             Setting::setValue('pos_background_image', '/storage/' . $path);
             $this->pos_background_preview = '/storage/' . $path;
             $this->pos_background_image = null;
 
             session()->flash('sukses', 'Background POS berhasil diperbarui!');
         }
+    }
+
+    // jpg/png/webp, maks 5MB & 16MP (lihat App\Support\AturanGambar)
+    private function aturanBackground(): array
+    {
+        return ['pos_background_image' => AturanGambar::rules()];
     }
 
     public function hapusBackground()

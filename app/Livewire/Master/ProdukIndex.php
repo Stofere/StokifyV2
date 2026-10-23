@@ -10,6 +10,7 @@ use App\Models\TransaksiPenjualan;
 use App\Models\TransaksiRetur;
 use App\Services\ImageService;
 use App\Services\StockService;
+use App\Support\AturanGambar;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -137,13 +138,11 @@ class ProdukIndex extends Component
             'harga_jual_satuan' => 'required|numeric|min:0',
             'lacak_stok' => 'boolean',
             'lokasi' => 'nullable|string|max:255',
-            'foto_baru.*' => 'image|mimes:jpeg,jpg,png,webp|max:15360',
+            ...$this->aturanFoto(),
         ], [
             'nama_produk.unique' => 'Nama produk ini telah terpakai! Silakan gunakan nama lain.',
             'kode_barang.unique' => 'Kode barang ini telah terpakai!',
-            'foto_baru.*.image' => 'File yang diunggah harus berupa gambar.',
-            'foto_baru.*.mimes' => 'Format foto harus JPG, PNG, atau WEBP.',
-            'foto_baru.*.max' => 'Ukuran tiap foto maksimal 15MB.',
+            ...$this->pesanFoto(),
         ]);
 
         $metadataFinal = [];
@@ -229,18 +228,34 @@ class ProdukIndex extends Component
                 'urutan' => $urutan++,
             ]);
         }
+
+        // File upload sementara tidak dibutuhkan lagi setelah di-encode ulang
+        foreach ($this->foto_baru as $file) {
+            $file->delete();
+        }
+    }
+
+    // Aturan foto produk: maks 3 file, tiap file harus lolos AturanGambar (jpg/png/webp, 5MB, 16MP)
+    private function aturanFoto(): array
+    {
+        return [
+            'foto_baru' => 'array|max:'.self::MAKS_FOTO,
+            'foto_baru.*' => AturanGambar::rules(),
+        ];
+    }
+
+    private function pesanFoto(): array
+    {
+        return [
+            'foto_baru.max' => 'Maksimal '.self::MAKS_FOTO.' foto per produk.',
+            ...AturanGambar::messages('foto_baru.*'),
+        ];
     }
 
     // Validasi instan saat user memilih file
     public function updatedFotoBaru()
     {
-        $this->validate([
-            'foto_baru.*' => 'image|mimes:jpeg,jpg,png,webp|max:15360',
-        ], [
-            'foto_baru.*.image' => 'File yang diunggah harus berupa gambar.',
-            'foto_baru.*.mimes' => 'Format foto harus JPG, PNG, atau WEBP.',
-            'foto_baru.*.max' => 'Ukuran tiap foto maksimal 15MB.',
-        ]);
+        $this->validate($this->aturanFoto(), $this->pesanFoto());
     }
 
     // Hapus 1 foto existing (saat mode edit) + file fisiknya

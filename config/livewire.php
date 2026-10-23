@@ -129,14 +129,14 @@ return [
     */
 
     'temporary_file_upload' => [
-        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'), // Example: 'local', 's3'             | Default: 'default'
-        'rules' => ['required', 'file', 'max:15360'],              // 15MB max for temporary uploads
+        'disk' => 'local',
+        // First layer gate: hanya gambar jpg/png/webp maks 5MB yang boleh sampai ke disk.
+        'rules' => ['required', ...\App\Support\AturanGambar::aturanDasar()],
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'
-        'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1'
+        // Wajib login + batas 10 upload/menit per user (limiter 'uploads' di AppServiceProvider)
+        'middleware' => ['auth', 'throttle:uploads'],
         'preview_mimes' => [                                  // Supported file types for temporary pre-signed file URLs...
-            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-            'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+            'jpg', 'jpeg', 'png', 'webp',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
