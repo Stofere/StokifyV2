@@ -224,13 +224,33 @@
 
                             {{-- Upload foto baru --}}
                             @if($sisaSlot > 0)
-                                <div x-data="{ previews: [], onPick(e){ this.previews = Array.from(e.target.files || []).map(f => URL.createObjectURL(f)); } }">
+                                {{-- Foto > 5MB / > 16MP diperkecil dulu di browser (resources/js/foto-upload.js), lalu diunggah --}}
+                                <div x-data="{
+                                        previews: [],
+                                        menyiapkan: false,
+                                        async onPick(e) {
+                                            const dipilih = Array.from(e.target.files || []).slice(0, Number(e.target.dataset.sisa));
+                                            e.target.value = '';
+                                            if (! dipilih.length) return;
+
+                                            this.menyiapkan = true;
+                                            try {
+                                                const files = await Promise.all(dipilih.map(f => window.siapkanFoto(f)));
+                                                this.previews = files.map(f => URL.createObjectURL(f));
+                                                // append = false: pilihan baru menggantikan pilihan sebelumnya (sesuai preview)
+                                                this.$wire.$uploadMultiple('foto_baru', files, () => {}, () => {}, () => {}, () => {}, false);
+                                            } finally {
+                                                this.menyiapkan = false;
+                                            }
+                                        }
+                                    }">
                                     <label class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-emerald-300 rounded-xl p-4 cursor-pointer hover:bg-emerald-100/50 transition">
-                                        <input type="file" wire:model="foto_baru" accept="image/jpeg,image/png,image/webp" multiple class="hidden" x-on:change="onPick($event)">
+                                        <input type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" data-sisa="{{ $sisaSlot }}" x-on:change="onPick($event)">
                                         <span class="text-sm font-semibold text-emerald-700">Klik untuk pilih foto (bisa {{ $sisaSlot }} lagi)</span>
-                                        <span class="text-[10px] text-emerald-600/70">JPG / PNG / WEBP · maks 15MB per foto</span>
+                                        <span class="text-[10px] text-emerald-600/70">JPG / PNG / WEBP · maks 5MB per foto (foto lebih besar otomatis diperkecil)</span>
                                     </label>
 
+                                    <div x-show="menyiapkan" x-cloak class="text-xs text-emerald-700 mt-2 font-semibold">Menyiapkan foto…</div>
                                     <div wire:loading wire:target="foto_baru" class="text-xs text-emerald-700 mt-2 font-semibold">Mengunggah foto…</div>
 
                                     {{-- Preview lokal sebelum disimpan --}}
@@ -242,6 +262,7 @@
                                         </div>
                                     </template>
 
+                                    @error('foto_baru') <p class="text-xs text-red-600 mt-2 font-semibold">{{ $message }}</p> @enderror
                                     @error('foto_baru.*') <p class="text-xs text-red-600 mt-2 font-semibold">{{ $message }}</p> @enderror
                                 </div>
                             @else

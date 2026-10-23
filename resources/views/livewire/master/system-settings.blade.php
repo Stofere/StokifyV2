@@ -47,24 +47,37 @@
             </div>
 
             {{-- Upload + Preview (Alpine.js FileReader: tidak bergantung endpoint server) --}}
-            <div x-data="{ localPreview: null, hasFile: false }"
-                 x-on:change.capture="
-                    const f = $event.target.files?.[0];
-                    if (f) {
-                        hasFile = true;
-                        const reader = new FileReader();
-                        reader.onload = e => localPreview = e.target.result;
-                        reader.readAsDataURL(f);
-                    } else {
-                        hasFile = false;
-                        localPreview = null;
+            {{-- Gambar > 5MB / > 16MP diperkecil dulu di browser (resources/js/foto-upload.js), lalu diunggah --}}
+            <div x-data="{
+                    localPreview: null,
+                    hasFile: false,
+                    menyiapkan: false,
+                    async pilih(e) {
+                        const asli = e.target.files?.[0];
+                        if (! asli) {
+                            this.hasFile = false;
+                            this.localPreview = null;
+                            return;
+                        }
+
+                        this.menyiapkan = true;
+                        try {
+                            const f = await window.siapkanFoto(asli, { pertahankanTransparansi: true });
+                            this.hasFile = true;
+                            const reader = new FileReader();
+                            reader.onload = ev => this.localPreview = ev.target.result;
+                            reader.readAsDataURL(f);
+                            this.$wire.$upload('pos_background_image', f);
+                        } finally {
+                            this.menyiapkan = false;
+                        }
                     }
-                 "
+                 }"
                  class="flex flex-col gap-4">
 
                 {{-- Input file --}}
                 <div>
-                    <input type="file" wire:model="pos_background_image" accept="image/*"
+                    <input type="file" accept="image/jpeg,image/png,image/webp" x-on:change="pilih($event)"
                            class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold {{ $isOwnerRole ? 'file:bg-blue-50 file:text-blue-pro' : 'file:bg-sage-light file:text-sage-dark' }} hover:file:opacity-80 cursor-pointer">
                     @error('pos_background_image') <span class="text-red-500 text-xs mt-1 block font-semibold">{{ $message }}</span> @enderror
                 </div>
@@ -77,7 +90,10 @@
                     </div>
                 </div>
 
+                <p class="text-[11px] text-slate-400 -mt-2">JPG / PNG / WEBP · maks 5MB (gambar lebih besar otomatis diperkecil)</p>
+
                 {{-- Wire loading indicator --}}
+                <div x-show="menyiapkan" x-cloak class="text-xs text-slate-500">Menyiapkan gambar…</div>
                 <div wire:loading wire:target="pos_background_image" class="text-xs text-slate-500 flex items-center gap-2">
                     <span class="material-symbols-outlined text-[16px] animate-spin">refresh</span> Mengupload ke server...
                 </div>
