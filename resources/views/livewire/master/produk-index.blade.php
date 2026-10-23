@@ -10,7 +10,7 @@
         </div>
         @if(!$form_open && !$stok_modal_open && !$modal_detail_nota_open)
             <button wire:click="$set('form_open', true)"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all
+                    class="w-full md:w-auto justify-center inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all
                            {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
                 <span class="material-symbols-outlined text-[18px]">add</span>
                 Tambah Barang Baru
@@ -308,17 +308,17 @@
                        class="w-full pl-10 pr-4 py-2.5 border-0 rounded-xl text-sm bg-white focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }} shadow-sm">
             </div>
             <button @click="showHargaGlobal = !showHargaGlobal"
-                    class="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors shrink-0
+                    class="w-full sm:w-auto justify-center flex items-center gap-2 text-sm font-semibold px-4 py-2.5 sm:py-2 rounded-lg transition-colors shrink-0
                            {{ $isOwnerRole ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-white border border-sage/15 text-sage-dark hover:bg-sage-light/30' }}">
                 <span class="material-symbols-outlined text-[18px]" x-text="showHargaGlobal ? 'visibility_off' : 'visibility'"></span>
                 <span x-text="showHargaGlobal ? 'Sembunyikan Harga' : 'Tampilkan Harga'"></span>
             </button>
         </div>
 
-        {{-- Table --}}
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
+        {{-- Table: tabel di layar lebar (lg), di HP & tablet berdiri tiap barang tampil sebagai kartu --}}
+        <div class="lg:overflow-x-auto">
+            <table class="block lg:table w-full text-left">
+                <thead class="hidden lg:table-header-group">
                     <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 {{ $isOwnerRole ? 'border-b border-slate-100' : 'border-b border-sage/10' }}">
                         <th class="p-4">Detail Barang</th>
                         <th class="p-4 text-right">Harga</th>
@@ -327,10 +327,11 @@
                         <th class="p-4 text-center w-40">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-sm">
+                <tbody class="block lg:table-row-group text-sm">
                     @forelse($daftarProduk as $prod)
-                    <tr class="transition-colors {{ !$prod->status_aktif ? 'opacity-50' : '' }} {{ $isOwnerRole ? 'hover:bg-slate-50 border-b border-slate-50' : 'hover:bg-sage-light/20 border-b border-sage/5' }}">
-                        <td class="p-4">
+                    {{-- Kartu HP: detail selebar kartu, lalu Stok · Harga · Status, tombol aksi di kanan bawah --}}
+                    <tr class="flex flex-wrap items-start gap-x-5 gap-y-3 p-4 lg:table-row lg:p-0 transition-colors {{ !$prod->status_aktif ? 'opacity-50' : '' }} {{ $isOwnerRole ? 'hover:bg-slate-50 border-b border-slate-100 lg:border-slate-50' : 'hover:bg-sage-light/20 border-b border-sage/10 lg:border-sage/5' }}">
+                        <td class="w-full lg:w-auto lg:p-4">
                             <p class="font-bold text-base leading-tight {{ $isOwnerRole ? 'text-charcoal' : 'text-sage-dark' }}">{{ $prod->nama_produk }}</p>
                             <div class="flex items-center gap-2 mt-1.5 flex-wrap">
                                 <span class="text-[10px] font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">{{ $prod->kode_barang ?? '—' }}</span>
@@ -361,12 +362,13 @@
                                 </button>
                             @endif
                         </td>
-                        <td class="p-4 text-right">
-                            <div class="flex flex-col items-end justify-center h-full">
-                                <span x-show="!showHargaGlobal" class="font-black text-gray-400 text-lg select-none">Rp ***.***</span>
-                                
-                                <div x-show="showHargaGlobal" style="display: none;" class="text-right">
-                                    <span class="font-black text-green-700 text-lg block">Rp {{ number_format($prod->harga_jual_satuan, 0, ',', '.') }} <span class="text-[10px] text-gray-500 uppercase">/{{ $prod->satuan }}</span></span>
+                        <td class="order-2 lg:p-4 lg:text-right">
+                            <div class="flex flex-col items-start lg:items-end justify-center h-full">
+                                <span class="lg:hidden text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Harga</span>
+                                <span x-show="!showHargaGlobal" class="font-black text-gray-400 text-base lg:text-lg select-none">Rp ***.***</span>
+
+                                <div x-show="showHargaGlobal" style="display: none;" class="text-left lg:text-right">
+                                    <span class="font-black text-green-700 text-base lg:text-lg block">Rp {{ number_format($prod->harga_jual_satuan, 0, ',', '.') }} <span class="text-[10px] text-gray-500 uppercase">/{{ $prod->satuan }}</span></span>
                                     
                                     {{-- Jika ada harga ecer meteran --}}
                                     @if(isset($prod->metadata['harga_meter']))
@@ -375,14 +377,21 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="p-4 text-center">
+                        <td class="order-1 lg:p-4 lg:text-center">
+                            <span class="lg:hidden block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Stok</span>
                             @if($prod->lacak_stok)
-                                <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg {{ $prod->stok_saat_ini <= 0 ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-700' }}">
-                                    <span class="font-bold text-base">{{ $prod->stok_display }}</span>
-                                    <span class="text-[10px] uppercase font-bold">{{ $prod->satuan }}</span>
+                                <div class="flex flex-wrap items-center gap-1.5 lg:block">
+                                    <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg {{ $prod->stok_saat_ini <= 0 ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-700' }}">
+                                        <span class="font-bold text-lg lg:text-base">{{ $prod->stok_display }}</span>
+                                        <span class="text-[10px] uppercase font-bold">{{ $prod->satuan }}</span>
+                                    </div>
+                                    {{-- Label status stok hanya di kartu HP; tabel PC tetap seperti semula --}}
+                                    @if(in_array($prod->status_stok, ['HABIS', 'MENIPIS']))
+                                        <span class="lg:hidden px-2 py-0.5 rounded-full border text-[11px] font-bold {{ $prod->status_stok === 'HABIS' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200' }}">{{ $prod->status_stok === 'HABIS' ? 'Habis' : 'Menipis' }}</span>
+                                    @endif
                                 </div>
                                 @if($prod->kategori->lacak_rol ?? false)
-                                    <div class="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 w-max mx-auto border border-indigo-100">
+                                    <div class="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 w-max lg:mx-auto border border-indigo-100">
                                         <span class="text-[10px] uppercase font-bold">🔵</span>
                                         <span class="font-bold text-sm">{{ $prod->stok_rol }} Rol</span>
                                     </div>
@@ -391,26 +400,27 @@
                                 <span class="text-[10px] bg-slate-100 text-slate-400 px-2 py-1 rounded font-bold uppercase">Tanpa Stok</span>
                             @endif
                         </td>
-                        <td class="p-4 text-center">
+                        <td class="order-3 lg:p-4 lg:text-center">
+                            <span class="lg:hidden block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Status</span>
                             @if($prod->status_aktif)
                                 <button wire:click="toggleAktif({{ $prod->id_produk }})" class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-red-50 hover:text-red-600 transition-colors">Aktif</button>
                             @else
                                 <button wire:click="toggleAktif({{ $prod->id_produk }})" class="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-emerald-50 hover:text-emerald-600 transition-colors">Nonaktif</button>
                             @endif
                         </td>
-                        <td class="p-4 text-center">
-                            <div class="flex flex-col gap-1.5">
+                        <td class="order-4 ml-auto self-center lg:ml-0 lg:p-4 lg:text-center">
+                            <div class="flex flex-row lg:flex-col gap-1.5">
                                 @if($prod->lacak_stok)
-                                    <button wire:click="bukaModalStok({{ $prod->id_produk }})" class="text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors {{ $isOwnerRole ? 'bg-blue-50 text-blue-pro hover:bg-blue-pro hover:text-white' : 'bg-sage-light text-sage-dark hover:bg-sage hover:text-white' }}">
+                                    <button wire:click="bukaModalStok({{ $prod->id_produk }})" class="text-xs lg:text-[11px] font-bold px-3 py-2 lg:py-1.5 rounded-lg transition-colors {{ $isOwnerRole ? 'bg-blue-50 text-blue-pro hover:bg-blue-pro hover:text-white' : 'bg-sage-light text-sage-dark hover:bg-sage hover:text-white' }}">
                                         Buku Stok
                                     </button>
                                 @endif
-                                <button @click="$dispatch('confirm-edit', { id: {{ $prod->id_produk }}, nama: '{{ addslashes($prod->nama_produk) }}' })" class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-colors">Edit</button>
+                                <button @click="$dispatch('confirm-edit', { id: {{ $prod->id_produk }}, nama: '{{ addslashes($prod->nama_produk) }}' })" class="text-xs lg:text-[11px] font-bold px-3 py-2 lg:py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-colors">Edit</button>
                             </div>
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="5" class="p-10 text-center text-slate-400 font-semibold">Tidak ada barang ditemukan.</td></tr>
+                    <tr class="block lg:table-row"><td colspan="5" class="block lg:table-cell p-10 text-center text-slate-400 font-semibold">Tidak ada barang ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -424,15 +434,15 @@
     @if($stok_modal_open && $produk_stok_aktif)
         <!-- PERUBAHAN: class z-40 agar berada di bawah modal recheck z-50 -->
         <div class="bg-white rounded-2xl overflow-hidden mb-6 {{ $modal_detail_nota_open ? 'hidden' : '' }} {{ $isOwnerRole ? 'border-2 border-blue-pro' : 'border-2 border-sage' }} relative z-40">
-            <div class="px-6 py-4 flex justify-between items-center {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
-                <div>
-                    <h3 class="font-headline text-xl font-bold flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[22px]">inventory_2</span>
-                        {{ $produk_stok_aktif->nama_produk }} {{ $produk_stok_aktif->kode_barang ? '('.$produk_stok_aktif->kode_barang.')' : '' }}
+            <div class="px-4 sm:px-6 py-4 flex justify-between items-center gap-3 {{ $isOwnerRole ? 'bg-charcoal text-white' : 'bg-sage-dark text-white' }}">
+                <div class="min-w-0">
+                    <h3 class="font-headline text-lg sm:text-xl font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[22px] shrink-0">inventory_2</span>
+                        <span class="min-w-0">{{ $produk_stok_aktif->nama_produk }} {{ $produk_stok_aktif->kode_barang ? '('.$produk_stok_aktif->kode_barang.')' : '' }}</span>
                     </h3>
                     <p class="text-sm mt-0.5 opacity-80">Buku Mutasi & Koreksi Stok</p>
                 </div>
-                <button wire:click="tutupModalStok" class="px-4 py-2 rounded-lg font-bold text-sm bg-white/10 hover:bg-red-500 transition-colors">Tutup</button>
+                <button wire:click="tutupModalStok" class="shrink-0 px-4 py-2 rounded-lg font-bold text-sm bg-white/10 hover:bg-red-500 transition-colors">Tutup</button>
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-3">
@@ -547,9 +557,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left text-sm min-w-[600px]">
-                            <thead>
+                    {{-- Tabel di layar lebar (lg); di HP & tablet berdiri tiap mutasi tampil sebagai kartu --}}
+                    <div class="lg:overflow-x-auto flex-1">
+                        <table class="block lg:table w-full text-left text-sm lg:min-w-[600px]">
+                            <thead class="hidden lg:table-header-group">
                                 <tr class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400 {{ $isOwnerRole ? 'border-b border-slate-100' : 'border-b border-sage/10' }}">
                                     <th class="p-3">Waktu & Pelaku</th>
                                     <th class="p-3">Tipe</th>
@@ -561,15 +572,15 @@
                                     <th class="p-3">Keterangan</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="block lg:table-row-group">
                                 @if($riwayatStok)
                                     @forelse($riwayatStok as $riwayat)
-                                        <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                            <td class="p-3">
+                                        <tr class="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 p-4 lg:table-row lg:p-0 border-b border-slate-100 lg:border-slate-50 hover:bg-slate-50/50 transition-colors">
+                                            <td class="lg:p-3">
                                                 <p class="font-semibold text-slate-700">{{ $riwayat->created_at->format('d/m/Y H:i') }}</p>
                                                 <p class="text-xs {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage' }} font-semibold">{{ $riwayat->user->name }}</p>
                                             </td>
-                                            <td class="p-3">
+                                            <td class="text-right lg:text-left lg:p-3">
                                                 @php
                                                     $tw = 'bg-slate-50 text-slate-500';
                                                     if(in_array($riwayat->tipe, ['MASUK', 'KOREKSI_PLUS', 'ROL_MASUK'])) $tw = 'bg-emerald-50 text-emerald-600';
@@ -577,11 +588,12 @@
                                                 @endphp
                                                 <span class="{{ $tw }} px-2 py-0.5 rounded text-[10px] font-bold uppercase">{{ str_replace('_', ' ', $riwayat->tipe) }}</span>
                                             </td>
-                                            <td class="p-3 text-right font-bold {{ in_array($riwayat->tipe, ['MASUK', 'KOREKSI_PLUS', 'AWAL', 'ROL_MASUK']) ? 'text-emerald-600' : 'text-red-500' }}">
+                                            <td class="lg:p-3 lg:text-right font-bold {{ in_array($riwayat->tipe, ['MASUK', 'KOREKSI_PLUS', 'AWAL', 'ROL_MASUK']) ? 'text-emerald-600' : 'text-red-500' }}">
                                                 @if(in_array($riwayat->tipe, ['ROL_MASUK', 'ROL_KELUAR']))
                                                     <span class="text-slate-400 font-normal">-</span>
                                                 @else
                                                     {{ in_array($riwayat->tipe, ['MASUK', 'KOREKSI_PLUS', 'AWAL']) ? '+' : '-' }}{{ fmod($riwayat->jumlah, 1) == 0 ? (int)$riwayat->jumlah : $riwayat->jumlah }}
+                                                    <span class="lg:hidden text-xs">{{ $produk_stok_aktif->satuan }}</span>
                                                     @if(strpos($riwayat->keterangan, '(Terjual') !== false)
                                                         @php
                                                             preg_match('/\(Terjual\s+(.*?)\)/', $riwayat->keterangan, $matches);
@@ -601,23 +613,28 @@
                                                     @endif
                                                 @endif
                                             </td>
-                                            <td class="p-3 text-center font-bold text-slate-700 bg-slate-50/50">
+                                            <td class="text-right lg:text-center lg:p-3 font-bold text-slate-700 lg:bg-slate-50/50">
+                                                <span class="lg:hidden text-xs font-semibold text-slate-400">Sisa:</span>
                                                 {{ fmod($riwayat->stok_sesudah, 1) == 0 ? (int)$riwayat->stok_sesudah : $riwayat->stok_sesudah }}
                                             </td>
                                             @if($produk_stok_aktif->kategori->lacak_rol ?? false)
-                                                <td class="p-3 text-center">
+                                                {{-- Di kartu HP kolom rol hanya muncul bila ada mutasi rol --}}
+                                                <td class="{{ $riwayat->rol_mutasi === null ? 'hidden lg:table-cell' : 'col-span-2' }} lg:p-3 lg:text-center">
                                                     @if($riwayat->rol_mutasi !== null)
                                                         @php $isPlus = in_array($riwayat->tipe, ['ROL_MASUK', 'AWAL', 'MASUK']); @endphp
-                                                        <div class="text-[10px] font-bold {{ $isPlus ? 'text-indigo-600' : 'text-rose-500' }}">
-                                                            {{ $isPlus ? '+' : '-' }}{{ $riwayat->rol_mutasi }} 🔵
+                                                        <div class="flex items-center gap-2 lg:block">
+                                                            <span class="lg:hidden text-xs font-semibold text-slate-400">Rol:</span>
+                                                            <div class="text-[10px] font-bold {{ $isPlus ? 'text-indigo-600' : 'text-rose-500' }}">
+                                                                {{ $isPlus ? '+' : '-' }}{{ $riwayat->rol_mutasi }} 🔵
+                                                            </div>
+                                                            <div class="text-[11px] font-bold text-slate-700"><span class="lg:hidden font-semibold text-slate-400">sisa</span> {{ $riwayat->rol_sesudah }}</div>
                                                         </div>
-                                                        <div class="text-[11px] font-bold text-slate-700">{{ $riwayat->rol_sesudah }}</div>
                                                     @else
                                                         <span class="text-slate-300">-</span>
                                                     @endif
                                                 </td>
                                             @endif
-                                            <td class="p-3 text-xs">
+                                            <td class="col-span-2 lg:p-3 text-xs">
                                                 @if($riwayat->id_transaksi_penjualan)
                                                     <button wire:click="lihatDetailNota({{ $riwayat->id_transaksi_penjualan }}, 'POS')" class="w-full text-left p-2 rounded-lg transition-colors {{ $isOwnerRole ? 'bg-blue-50 hover:bg-blue-100 border border-blue-100' : 'bg-sage-light/50 hover:bg-sage-light border border-sage/10' }}">
                                                         <span class="font-bold block {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }}">POS · {{ optional($riwayat->transaksiPenjualan)->tanggal_transaksi?->format('d M Y, H:i') ?? '-' }}</span>
@@ -640,7 +657,7 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="5" class="p-8 text-center text-slate-400 font-semibold">Tidak ada riwayat.</td></tr>
+                                        <tr class="block lg:table-row"><td colspan="5" class="block lg:table-cell p-8 text-center text-slate-400 font-semibold">Tidak ada riwayat.</td></tr>
                                     @endforelse
                                 @endif
                             </tbody>

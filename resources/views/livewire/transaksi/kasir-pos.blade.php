@@ -3,7 +3,8 @@
     $posBg = \App\Models\Setting::getValue('pos_background_image');
 @endphp
 
-<div class="flex flex-col md:flex-row md:h-[calc(100vh-3.5rem)] md:overflow-hidden fade-in relative"
+{{-- Owner di tablet berdiri (md–lg) punya menu bawah ±5rem: tinggi area kasir dikurangi agar tombol bayar tidak tertutup --}}
+<div class="flex flex-col md:flex-row {{ $isOwnerRole ? 'md:h-[calc(100vh-8.5rem)] lg:h-[calc(100vh-3.5rem)]' : 'md:h-[calc(100vh-3.5rem)]' }} md:overflow-hidden fade-in relative"
      x-data="{ 
         showPrices: true,
         jam: '',

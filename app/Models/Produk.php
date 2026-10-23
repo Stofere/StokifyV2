@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Produk extends Model
 {
@@ -84,6 +86,33 @@ class Produk extends Model
         }
 
         return 'AMAN';
+    }
+
+    // Scope: barang aktif berstatus HABIS / MENIPIS (batas sama dengan getStokMinimumAttribute),
+    // urut HABIS dulu lalu kode barang. Dipakai Laporan Stok Menipis & pratinjau dashboard owner.
+    public function scopePerluRestock(Builder $query): Builder
+    {
+        return $query->where('status_aktif', true)
+            ->where('lacak_stok', true)
+            ->where(function ($query) {
+                // HABIS: stok <= 0
+                $query->where('stok_saat_ini', '<=', 0)
+                    // MENIPIS: stok > 0 tapi di bawah batas minimum
+                    ->orWhere(function ($q) {
+                        $q->where('stok_saat_ini', '>', 0)
+                          ->where(function ($inner) {
+                              $inner->where(function ($sub) {
+                                  $sub->whereIn(DB::raw('LOWER(satuan)'), ['pcs', 'biji', 'unit', 'buah'])
+                                      ->where('stok_saat_ini', '<=', 20);
+                              })->orWhere(function ($sub) {
+                                  $sub->whereNotIn(DB::raw('LOWER(satuan)'), ['pcs', 'biji', 'unit', 'buah'])
+                                      ->where('stok_saat_ini', '<=', 1);
+                              });
+                          });
+                    });
+            })
+            ->orderByRaw('CASE WHEN stok_saat_ini <= 0 THEN 0 ELSE 1 END ASC')
+            ->orderBy('kode_barang', 'ASC');
     }
 
     public function kategori(): BelongsTo

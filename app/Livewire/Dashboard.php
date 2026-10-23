@@ -387,6 +387,11 @@ class Dashboard extends Component
             ->where('stok_saat_ini', '>', 0)
             ->sum(DB::raw('stok_saat_ini * harga_jual_satuan'));
 
+        // 7. PRATINJAU PERLU RESTOCK (Owner) — 6 teratas, aturan sama dengan Laporan Stok Menipis
+        $perluRestock = $isOwner
+            ? Produk::with('kategori')->perluRestock()->limit(6)->get()
+            : collect();
+
         return view('livewire.dashboard', [
             'isOwner' => $isOwner,
             'omsetBulanIni' => $omsetBulanIni,
@@ -403,6 +408,7 @@ class Dashboard extends Component
             'stokHabis' => $stokHabis,
             'stokMenipis' => $stokMenipis,
             'nilaiInventaris' => $nilaiInventaris,
+            'perluRestock' => $perluRestock,
         ]);
     }
 }
