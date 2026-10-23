@@ -14,9 +14,10 @@ use Exception;
 class ReturnService
 {
     /**
-     * Memproses Retur/Tukar Barang.
-     * $itemsRetur format: 
-     * [['id_detail_penjualan' => x, 'id_produk_pengganti' => y, 'jumlah' => z, 
+     * Memproses Retur: Tukar Barang atau Batal Beli.
+     * $itemsRetur format:
+     * [['id_detail_penjualan' => x, 'id_produk_pengganti' => y, 'jumlah' => z,
+     *   (id_produk_pengganti null = Batal Beli: tanpa barang pengganti, uang dikembalikan ke pelanggan)
      *   'kondisi_barang_dikembalikan' => 'BAGUS'/'RUSAK',
      *   'jumlah_potong_gudang_retur' => w (opsional, KG fisik yang dikembalikan ke gudang),
      *   'harga_pengganti_per_unit' => h (harga per unit pengganti, bisa /KG atau /Meter),
@@ -66,11 +67,12 @@ class ReturnService
                     throw new Exception("Jumlah retur melebihi batas. Sisa yang boleh diretur: " . $sisaBisaDiretur);
                 }
 
-                // Kunci produk lama dan produk baru
+                // Kunci produk lama dan produk baru (Batal Beli: tidak ada produk pengganti)
+                $idPengganti = $item['id_produk_pengganti'] ?? null;
                 $produkLama = Produk::lockForUpdate()->find($detailAwal->id_produk);
-                $produkPengganti = Produk::lockForUpdate()->find($item['id_produk_pengganti']);
+                $produkPengganti = $idPengganti !== null ? Produk::lockForUpdate()->find($idPengganti) : null;
 
-                if (!$produkLama || !$produkPengganti) {
+                if (!$produkLama || ($idPengganti !== null && !$produkPengganti)) {
                     throw new Exception("Data produk fisik (lama/pengganti) tidak ditemukan.");
                 }
 
@@ -79,10 +81,14 @@ class ReturnService
                 // ===================================================================
                 // Harga lama per unit = harga_satuan di nota (sudah benar, bisa /Meter atau /KG)
                 $hargaTotalLama = $detailAwal->harga_satuan * $qtyRetur;
-                // Harga pengganti = harga per unit yang sudah dihitung oleh Livewire (bisa /KG atau /Meter)
-                $hargaPenggantiPerUnit = $item['harga_pengganti_per_unit'] ?? $produkPengganti->harga_jual_satuan;
-                $hargaTotalBaru = $hargaPenggantiPerUnit * $qtyRetur;
-                $subtotalBiaya = $hargaTotalBaru - $hargaTotalLama; 
+                // Batal Beli: tidak ada barang baru → seluruh harga lama dikembalikan ke pelanggan
+                $hargaTotalBaru = 0;
+                if ($produkPengganti) {
+                    // Harga pengganti = harga per unit yang sudah dihitung oleh Livewire (bisa /KG atau /Meter)
+                    $hargaPenggantiPerUnit = $item['harga_pengganti_per_unit'] ?? $produkPengganti->harga_jual_satuan;
+                    $hargaTotalBaru = $hargaPenggantiPerUnit * $qtyRetur;
+                }
+                $subtotalBiaya = $hargaTotalBaru - $hargaTotalLama;
                 $totalBiayaRetur += $subtotalBiaya;
 
                 // ===================================================================
@@ -118,7 +124,7 @@ class ReturnService
                     
                     $produkLama->update(['stok_saat_ini' => $stokSesudahLama]);
 
-                    $ketRetur = "Pengembalian Retur (Kondisi Bagus). Nota: " . $transaksiAwal->kode_nota;
+                    $ketRetur = ($produkPengganti ? "Pengembalian Retur" : "Retur Batal Beli") . " (Kondisi Bagus). Nota: " . $transaksiAwal->kode_nota;
                     if ($isDualUnit) {
                         $ketRetur .= " (Dikembalikan {$qtyRetur} Meter = {$kgFisikKembali} KG)";
                     }
@@ -139,7 +145,8 @@ class ReturnService
                 // ==========================================================
                 // TAHAP 2: MANAJEMEN STOK PRODUK PENGGANTI (DIKELUARKAN TOKO)
                 // ==========================================================
-                if ($produkPengganti->lacak_stok) {
+                // Batal Beli: tidak ada barang pengganti yang keluar dari stok
+                if ($produkPengganti && $produkPengganti->lacak_stok) {
                     
                     // 🐛 FIX BUG RACE-CONDITION MEMORY!
                     if ($produkPengganti->id_produk === $produkLama->id_produk) {
@@ -190,7 +197,7 @@ class ReturnService
                 DetailRetur::create([
                     'id_retur' => $transaksiRetur->id_retur,
                     'id_produk_dikembalikan' => $produkLama->id_produk,
-                    'id_produk_pengganti' => $produkPengganti->id_produk,
+                    'id_produk_pengganti' => $produkPengganti?->id_produk,
                     'jumlah' => $qtyRetur,
                     'kondisi_barang_dikembalikan' => $item['kondisi_barang_dikembalikan'],
                     'subtotal_biaya' => $subtotalBiaya,

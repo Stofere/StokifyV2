@@ -92,7 +92,11 @@
                                     <div class="retur-box">
                                         <span class="retur-title">Diretur pada: {{ $jejak['nota_retur']->tanggal_retur->format('d/m/Y') }}</span>
                                         Kembali: <strong>{{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }}</strong> ({{ $jejak['detail']->kondisi_barang_dikembalikan }})<br>
-                                        Ganti dgn: <strong>{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> ({{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }})
+                                        @if($jejak['detail']->isBatalBeli())
+                                            <strong>Batal beli</strong> (tanpa pengganti, uang dikembalikan)
+                                        @else
+                                            Ganti dgn: <strong>{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> ({{ fmod($jejak['detail']->jumlah, 1) == 0 ? (int)$jejak['detail']->jumlah : $jejak['detail']->jumlah }} {{ strtoupper($det->satuan_saat_jual) }})
+                                        @endif
                                         <span class="retur-note">"{{ $jejak['nota_retur']->catatan ?? 'Tanpa catatan' }}"</span>
                                     </div>
                                 @endforeach

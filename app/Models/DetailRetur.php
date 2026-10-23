@@ -38,4 +38,10 @@ class DetailRetur extends Model
     {
         return $this->belongsTo(Produk::class, 'id_produk_pengganti', 'id_produk');
     }
+
+    // Retur tanpa barang pengganti: barang dikembalikan, uang dikembalikan ke pelanggan
+    public function isBatalBeli(): bool
+    {
+        return $this->id_produk_pengganti === null;
+    }
 }

@@ -169,6 +169,18 @@
             
             $selisihSatuan = $hargaPenggantiDisplay - $detailTerpilih->harga_satuan;
             $totalSelisih = $selisihSatuan * (float)($qty_retur ?: 0);
+
+            // Batal Beli: tidak ada barang pengganti, seluruh harga nota dikembalikan ke pelanggan
+            $isBatalBeli = $jenis_retur === 'BATAL_BELI';
+            if ($isBatalBeli) {
+                $totalSelisih = -($detailTerpilih->harga_satuan * (float)($qty_retur ?: 0));
+            }
+
+            // Jumlah yang masuk stok lagi. Barang Meter masuk stok dalam satuan timbangan (KG).
+            $fmtQty = fn ($v) => fmod((float) $v, 1) == 0 ? (int) $v : (float) $v;
+            $stokKembaliDisplay = $isDualUnitRetur
+                ? $fmtQty($jumlah_potong_gudang_retur ?: 0) . ' ' . strtoupper($detailTerpilih->produk->satuan)
+                : $fmtQty($qty_retur ?: 0) . ' ' . strtoupper($detailTerpilih->satuan_saat_jual);
         @endphp
 
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
@@ -212,7 +224,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">Kondisi Fisik</label>
-                            <select wire:model="kondisi_retur" class="w-full border-0 rounded-lg px-3 py-2.5 bg-white font-bold shadow-sm focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }}">
+                            <select wire:model.live="kondisi_retur" class="w-full border-0 rounded-lg px-3 py-2.5 bg-white font-bold shadow-sm focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }}">
                                 <option value="BAGUS">BAGUS (Kembali Gudang)</option>
                                 <option value="RUSAK">RUSAK (Cacat)</option>
                             </select>
@@ -232,82 +244,122 @@
                     @endif
                 </div>
 
-                {{-- RIGHT: REPLACEMENT ITEM --}}
+                {{-- RIGHT: PENYELESAIAN RETUR (Batal Beli / Tukar Barang) --}}
                 <div class="w-full md:w-1/2 p-6 flex flex-col justify-between bg-white">
                     <div>
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b pb-2 border-slate-100">Barang Pengganti</h3>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b pb-2 border-slate-100">Pelanggan Mau Apa?</h3>
 
-                        {{-- Live Search --}}
-                        <div class="mb-4 relative">
-                            <label class="block text-xs font-bold text-slate-500 mb-1">Ganti dengan barang lain?</label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                                <input wire:model.live.debounce.300ms="search_produk_pengganti" type="text" placeholder="Ketik SKU, Nama, Merk..."
-                                       class="w-full pl-10 pr-4 py-2.5 border-0 rounded-lg text-sm {{ $isOwnerRole ? 'bg-blue-50/50' : 'bg-sage-light/30' }} focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }} shadow-sm">
-                            </div>
-                            @if(count($hasil_pencarian_produk) > 0)
-                                <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
-                                    @foreach($hasil_pencarian_produk as $hasil)
-                                        <div wire:click="pilihBarangPengganti({{ $hasil->id_produk }})" class="p-3 cursor-pointer hover:bg-slate-50 flex justify-between items-center transition-colors border-b border-slate-50">
-                                            <div>
-                                                <p class="text-sm font-bold text-slate-700">
-                                                    {{ $hasil->nama_produk }}
-                                                    <x-kode-barang :kode="$hasil->kode_barang" :owner="$isOwnerRole" />
-                                                </p>
-                                                <p class="text-xs font-semibold text-emerald-600">Rp {{ number_format($hasil->harga_jual_satuan, 0, ',', '.') }}</p>
-                                            </div>
-                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $hasil->stok_saat_ini > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500' }}">{{ $hasil->stok_display }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
+                        {{-- Pilihan jenis retur --}}
+                        <div class="flex gap-2 mb-4">
+                            <button type="button" wire:click="$set('jenis_retur', 'BATAL_BELI')"
+                                    class="flex-1 p-3 rounded-lg text-left transition-all {{ $isBatalBeli ? ($isOwnerRole ? 'bg-blue-pro text-white' : 'bg-sage-dark text-white') : 'bg-white text-slate-500 border border-slate-200' }}">
+                                <span class="flex items-center gap-1.5 text-sm font-bold">
+                                    <span class="material-symbols-outlined text-[18px]">undo</span> Batal Beli
+                                </span>
+                                <span class="block text-[11px] mt-0.5 opacity-80">Uang dikembalikan</span>
+                            </button>
+                            <button type="button" wire:click="$set('jenis_retur', 'TUKAR')"
+                                    class="flex-1 p-3 rounded-lg text-left transition-all {{ !$isBatalBeli ? ($isOwnerRole ? 'bg-blue-pro text-white' : 'bg-sage-dark text-white') : 'bg-white text-slate-500 border border-slate-200' }}">
+                                <span class="flex items-center gap-1.5 text-sm font-bold">
+                                    <span class="material-symbols-outlined text-[18px]">swap_horiz</span> Tukar Barang
+                                </span>
+                                <span class="block text-[11px] mt-0.5 opacity-80">Ganti barang lain/sama</span>
+                            </button>
                         </div>
 
-                        {{-- Selected Replacement --}}
-                        <div class="bg-slate-50 p-4 rounded-xl mb-4">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Akan Diberikan:</p>
-                                    <p class="font-headline font-bold {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }} leading-tight">
-                                        {{ $produk_pengganti->nama_produk }}
-                                        <x-kode-barang :kode="$produk_pengganti->kode_barang" tone="bg-emerald-600" />
-                                    </p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-headline text-xl font-bold text-slate-700">Rp {{ number_format($hargaPenggantiDisplay, 0, ',', '.') }}</p>
-                                    <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">per {{ $satuanPenggantiDisplay }}</p>
+                        @if($isBatalBeli)
+                            {{-- Ringkasan Batal Beli --}}
+                            <div class="bg-slate-50 p-4 rounded-xl mb-4">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Yang Akan Terjadi</p>
+                                <div class="space-y-2 text-sm font-semibold text-slate-700">
+                                    @if($kondisi_retur === 'RUSAK')
+                                        <p class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-red-500">delete</span> Barang rusak dibuang, stok tidak bertambah</p>
+                                    @elseif($detailTerpilih->produk->lacak_stok)
+                                        <p class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-emerald-600">add_circle</span> Stok bertambah +{{ $stokKembaliDisplay }}</p>
+                                    @else
+                                        <p class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-slate-400">inventory_2</span> Stok barang ini tidak dihitung</p>
+                                    @endif
+                                    <p class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span> Tidak ada barang yang keluar</p>
                                 </div>
                             </div>
 
-                            {{-- Toggle KG / Meter untuk pengganti (hanya jika pengganti punya harga_meter) --}}
-                            @if(isset($produk_pengganti->metadata['harga_meter']))
-                                <div class="mt-3 pt-3 border-t border-slate-200">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Satuan Pengganti</p>
-                                    <div class="flex gap-2">
-                                        <button type="button" wire:click="$set('satuan_pengganti', '{{ strtolower($produk_pengganti->satuan) }}')"
-                                                class="flex-1 py-2 rounded-lg text-xs font-bold transition-all {{ $satuan_pengganti !== 'meter' ? ($isOwnerRole ? 'bg-blue-pro text-white' : 'bg-sage-dark text-white') : 'bg-white text-slate-500 border border-slate-200' }}">
-                                            {{ strtoupper($produk_pengganti->satuan) }} — Rp {{ number_format($produk_pengganti->harga_jual_satuan, 0, ',', '.') }}
-                                        </button>
-                                        <button type="button" wire:click="$set('satuan_pengganti', 'meter')"
-                                                class="flex-1 py-2 rounded-lg text-xs font-bold transition-all {{ $satuan_pengganti === 'meter' ? ($isOwnerRole ? 'bg-blue-pro text-white' : 'bg-sage-dark text-white') : 'bg-white text-slate-500 border border-slate-200' }}">
-                                            METER — Rp {{ number_format($produk_pengganti->metadata['harga_meter'], 0, ',', '.') }}
-                                        </button>
+                            <div class="mb-4 p-4 rounded-xl bg-emerald-50 border-2 border-emerald-200">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Uang Dikembalikan ke Pelanggan</p>
+                                <p class="font-headline text-xl font-bold text-emerald-700">Rp {{ number_format(abs($totalSelisih), 0, ',', '.') }}</p>
+                            </div>
+                        @else
+                            {{-- Live Search --}}
+                            <div class="mb-4 relative">
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Ganti dengan barang lain?</label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                                    <input wire:model.live.debounce.300ms="search_produk_pengganti" type="text" placeholder="Ketik SKU, Nama, Merk..."
+                                           class="w-full pl-10 pr-4 py-2.5 border-0 rounded-lg text-sm {{ $isOwnerRole ? 'bg-blue-50/50' : 'bg-sage-light/30' }} focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }} shadow-sm">
+                                </div>
+                                @if(count($hasil_pencarian_produk) > 0)
+                                    <div class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                                        @foreach($hasil_pencarian_produk as $hasil)
+                                            <div wire:click="pilihBarangPengganti({{ $hasil->id_produk }})" class="p-3 cursor-pointer hover:bg-slate-50 flex justify-between items-center transition-colors border-b border-slate-50">
+                                                <div>
+                                                    <p class="text-sm font-bold text-slate-700">
+                                                        {{ $hasil->nama_produk }}
+                                                        <x-kode-barang :kode="$hasil->kode_barang" :owner="$isOwnerRole" />
+                                                    </p>
+                                                    <p class="text-xs font-semibold text-emerald-600">Rp {{ number_format($hasil->harga_jual_satuan, 0, ',', '.') }}</p>
+                                                </div>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $hasil->stok_saat_ini > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500' }}">{{ $hasil->stok_display }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Selected Replacement --}}
+                            <div class="bg-slate-50 p-4 rounded-xl mb-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Akan Diberikan:</p>
+                                        <p class="font-headline font-bold {{ $isOwnerRole ? 'text-blue-pro' : 'text-sage-dark' }} leading-tight">
+                                            {{ $produk_pengganti->nama_produk }}
+                                            <x-kode-barang :kode="$produk_pengganti->kode_barang" tone="bg-emerald-600" />
+                                        </p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-headline text-xl font-bold text-slate-700">Rp {{ number_format($hargaPenggantiDisplay, 0, ',', '.') }}</p>
+                                        <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">per {{ $satuanPenggantiDisplay }}</p>
                                     </div>
                                 </div>
-                            @endif
-                        </div>
 
-                        {{-- Price Difference --}}
-                        <div class="mb-4 p-4 rounded-xl {{ $totalSelisih > 0 ? 'bg-amber-50 border-2 border-amber-200' : ($totalSelisih < 0 ? 'bg-emerald-50 border-2 border-emerald-200' : 'bg-slate-50 border-2 border-slate-200') }}">
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Selisih Biaya</p>
-                            @if($totalSelisih > 0)
-                                <p class="font-headline text-xl font-bold text-amber-700">Pelanggan Nambah: Rp {{ number_format(abs($totalSelisih), 0, ',', '.') }}</p>
-                            @elseif($totalSelisih < 0)
-                                <p class="font-headline text-xl font-bold text-emerald-700">Toko Kembalikan: Rp {{ number_format(abs($totalSelisih), 0, ',', '.') }}</p>
-                            @else
-                                <p class="font-headline text-xl font-bold text-slate-600">Tukar Guling (Rp 0)</p>
-                            @endif
-                        </div>
+                                {{-- Toggle KG / Meter untuk pengganti (hanya jika pengganti punya harga_meter) --}}
+                                @if(isset($produk_pengganti->metadata['harga_meter']))
+                                    <div class="mt-3 pt-3 border-t border-slate-200">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Satuan Pengganti</p>
+                                        <div class="flex gap-2">
+                                            <button type="button" wire:click="$set('satuan_pengganti', '{{ strtolower($produk_pengganti->satuan) }}')"
+                                                    class="flex-1 py-2 rounded-lg text-xs font-bold transition-all {{ $satuan_pengganti !== 'meter' ? ($isOwnerRole ? 'bg-blue-pro text-white' : 'bg-sage-dark text-white') : 'bg-white text-slate-500 border border-slate-200' }}">
+                                                {{ strtoupper($produk_pengganti->satuan) }} — Rp {{ number_format($produk_pengganti->harga_jual_satuan, 0, ',', '.') }}
+                                            </button>
+                                            <button type="button" wire:click="$set('satuan_pengganti', 'meter')"
+                                                    class="flex-1 py-2 rounded-lg text-xs font-bold transition-all {{ $satuan_pengganti === 'meter' ? ($isOwnerRole ? 'bg-blue-pro text-white' : 'bg-sage-dark text-white') : 'bg-white text-slate-500 border border-slate-200' }}">
+                                                METER — Rp {{ number_format($produk_pengganti->metadata['harga_meter'], 0, ',', '.') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Price Difference --}}
+                            <div class="mb-4 p-4 rounded-xl {{ $totalSelisih > 0 ? 'bg-amber-50 border-2 border-amber-200' : ($totalSelisih < 0 ? 'bg-emerald-50 border-2 border-emerald-200' : 'bg-slate-50 border-2 border-slate-200') }}">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Selisih Biaya</p>
+                                @if($totalSelisih > 0)
+                                    <p class="font-headline text-xl font-bold text-amber-700">Pelanggan Nambah: Rp {{ number_format(abs($totalSelisih), 0, ',', '.') }}</p>
+                                @elseif($totalSelisih < 0)
+                                    <p class="font-headline text-xl font-bold text-emerald-700">Toko Kembalikan: Rp {{ number_format(abs($totalSelisih), 0, ',', '.') }}</p>
+                                @else
+                                    <p class="font-headline text-xl font-bold text-slate-600">Tukar Guling (Rp 0)</p>
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Execute Section --}}
@@ -318,7 +370,7 @@
                                    class="w-full border-0 rounded-lg px-3 py-2.5 text-sm bg-slate-50 focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }} font-semibold">
                         </div>
                         <div class="mb-3">
-                            <input wire:model="catatan" type="text" placeholder="Catatan Wajib (Cth: Speaker sobek minta tukar)" required
+                            <input wire:model="catatan" type="text" placeholder="{{ $isBatalBeli ? 'Catatan Wajib (Cth: Ukuran tidak cocok, pelanggan batal beli)' : 'Catatan Wajib (Cth: Speaker sobek minta tukar)' }}" required
                                    class="w-full border-0 rounded-lg px-3 py-2.5 text-sm bg-slate-50 focus:ring-2 {{ $isOwnerRole ? 'focus:ring-blue-pro/20' : 'focus:ring-sage/20' }}">
                         </div>
                         <div class="mb-4">
@@ -329,7 +381,9 @@
                         <div class="flex justify-end gap-2">
                             <button type="button" wire:click="tutupModalRetur" class="px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Batal</button>
                             <button type="submit"
-                                    wire:confirm="Pastikan fisik barang lama dan uang selisih sudah diterima/dikembalikan. Lanjutkan proses?"
+                                    wire:confirm="{{ $isBatalBeli
+                                        ? 'Pastikan barang sudah diterima dan uang Rp ' . number_format(abs($totalSelisih), 0, ',', '.') . ' sudah dikembalikan ke pelanggan. Lanjutkan?'
+                                        : 'Pastikan fisik barang lama dan uang selisih sudah diterima/dikembalikan. Lanjutkan proses?' }}"
                                     class="px-6 py-2.5 rounded-xl font-bold text-sm text-white shadow-md transition-all
                                            {{ $isOwnerRole ? 'bg-blue-pro hover:bg-blue-800' : 'bg-sage-dark hover:bg-sage' }}">
                                 Proses Retur Sekarang

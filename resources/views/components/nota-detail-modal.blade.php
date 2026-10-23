@@ -112,7 +112,11 @@
                                                     Diretur {{ $jejak['nota_retur']->tanggal_retur->format('d/m/Y H:i') }}
                                                 </p>
                                                 <p class="text-gray-700 mb-0.5">Dikembalikan <strong class="text-red-600">{{ $fmt($jejak['detail']->jumlah) }} {{ strtoupper($det->satuan_saat_jual) }}</strong> (Kondisi: {{ $jejak['detail']->kondisi_barang_dikembalikan }})</p>
-                                                <p class="text-gray-700 mb-0.5">Diganti dengan <strong class="text-green-700">{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> <x-kode-barang :kode="$jejak['detail']->produkPengganti->kode_barang" tone="bg-emerald-600" /> ({{ $fmt($jejak['detail']->jumlah) }} {{ strtoupper($det->satuan_saat_jual) }})</p>
+                                                @if($jejak['detail']->isBatalBeli())
+                                                    <p class="text-gray-700 mb-0.5"><strong class="text-green-700">Batal beli</strong>, tanpa barang pengganti (uang dikembalikan)</p>
+                                                @else
+                                                    <p class="text-gray-700 mb-0.5">Diganti dengan <strong class="text-green-700">{{ $jejak['detail']->produkPengganti->nama_produk }}</strong> <x-kode-barang :kode="$jejak['detail']->produkPengganti->kode_barang" tone="bg-emerald-600" /> ({{ $fmt($jejak['detail']->jumlah) }} {{ strtoupper($det->satuan_saat_jual) }})</p>
+                                                @endif
                                                 <p class="bg-white p-1.5 rounded border border-orange-100 text-gray-600 italic mt-1.5">"{{ $jejak['nota_retur']->catatan ?? 'Tanpa catatan' }}"</p>
                                                 @if($returLinkAction)
                                                     <button wire:click="{{ $returLinkAction }}({{ $jejak['nota_retur']->id_retur }}, 'RETUR')" class="mt-2 bg-white border border-orange-300 text-orange-700 hover:bg-orange-100 px-3 py-1 rounded-full font-bold transition-colors w-max text-[10px]">
@@ -213,7 +217,7 @@
                     <p class="text-sm text-slate-700 italic">"{{ $nota->catatan ?? 'Tidak ada catatan.' }}"</p>
                 </div>
 
-                <h4 class="font-semibold text-sm text-slate-700 mb-3 border-b pb-2 border-slate-100">Rincian Tukar Barang</h4>
+                <h4 class="font-semibold text-sm text-slate-700 mb-3 border-b pb-2 border-slate-100">Rincian Retur</h4>
                 <div class="space-y-4">
                     @foreach($nota->detailRetur as $detRetur)
                         @php
@@ -244,16 +248,26 @@
                                 <div class="flex items-center justify-center px-3 bg-slate-100">
                                     <span class="material-symbols-outlined text-slate-400">arrow_forward</span>
                                 </div>
-                                <div class="flex-1 bg-emerald-50 p-4">
-                                    <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mb-2">Pengganti</p>
-                                    <p class="font-bold text-emerald-700 text-sm">
-                                        {{ $detRetur->produkPengganti->nama_produk }}
-                                        <x-kode-barang :kode="$detRetur->produkPengganti->kode_barang" tone="bg-emerald-600" />
-                                    </p>
-                                    <div class="mt-2 space-y-1 text-xs text-slate-600">
-                                        <p>Jumlah: <strong class="text-emerald-600">{{ $fmt($detRetur->jumlah) }} {{ $satuanAsli }}</strong></p>
+                                @if($detRetur->isBatalBeli())
+                                    <div class="flex-1 bg-slate-50 p-4">
+                                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Batal Beli</p>
+                                        <p class="font-bold text-slate-700 text-sm">Tanpa barang pengganti</p>
+                                        <div class="mt-2 space-y-1 text-xs text-slate-600">
+                                            <p>Uang dikembalikan ke pelanggan.</p>
+                                        </div>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="flex-1 bg-emerald-50 p-4">
+                                        <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mb-2">Pengganti</p>
+                                        <p class="font-bold text-emerald-700 text-sm">
+                                            {{ $detRetur->produkPengganti->nama_produk }}
+                                            <x-kode-barang :kode="$detRetur->produkPengganti->kode_barang" tone="bg-emerald-600" />
+                                        </p>
+                                        <div class="mt-2 space-y-1 text-xs text-slate-600">
+                                            <p>Jumlah: <strong class="text-emerald-600">{{ $fmt($detRetur->jumlah) }} {{ $satuanAsli }}</strong></p>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                             @if($detRetur->subtotal_biaya != 0)
                                 <div class="px-4 py-2 {{ $detRetur->subtotal_biaya > 0 ? 'bg-amber-50 border-t border-amber-200' : 'bg-emerald-50 border-t border-emerald-200' }} text-xs font-bold">

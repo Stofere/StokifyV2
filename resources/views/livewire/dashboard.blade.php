@@ -280,7 +280,7 @@
                 <div>
                     <p class="text-[10px] font-label font-bold uppercase tracking-widest text-slate-400">Selisih Retur Bulan Ini</p>
                     <h3 class="font-headline text-xl font-bold text-charcoal mt-1">Rp {{ number_format($returBulanIni, 0, ',', '.') }}</h3>
-                    <p class="text-[10px] text-slate-400 mt-0.5 font-semibold">(+) Pelanggan Nombok, (-) Toko Rugi</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5 font-semibold">(+) Pelanggan Nombok, (-) Uang Dikembalikan</p>
                 </div>
             </div>
         </div>
@@ -606,6 +606,11 @@
                                             <p class="text-[11px] text-slate-500 mt-1 pl-7 flex items-center gap-1">
                                                 <span class="material-symbols-outlined text-[13px] text-blue-pro">swap_horiz</span>
                                                 Diganti: <span class="font-semibold text-charcoal">{{ $item['pengganti'] }}</span>
+                                            </p>
+                                        @else
+                                            <p class="text-[11px] text-slate-500 mt-1 pl-7 flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[13px] text-blue-pro">undo</span>
+                                                Batal beli, tanpa pengganti
                                             </p>
                                         @endif
                                         @if(!empty($item['kondisi']))

@@ -27,8 +27,11 @@ return new class extends Migration
             // Sesuai aturan arsitektur: RESTRICT, produk tidak boleh dihapus jika sudah berelasi
             $table->foreign('id_kategori')->references('id_kategori')->on('kategori')->onDelete('restrict');
             
-            // Fulltext Indexing untuk pencarian No-Lag di POS
-            $table->fullText('index_pencarian', 'idx_pencarian');
+            // Fulltext Indexing untuk pencarian No-Lag di POS.
+            // SQLite (database test in-memory) tidak mendukung fulltext, jadi dilewati di sana.
+            if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+                $table->fullText('index_pencarian', 'idx_pencarian');
+            }
         });
     }
 

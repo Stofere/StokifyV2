@@ -35,6 +35,7 @@ class ReturPenjualan extends Component
     public $detailTerpilih = null;
     public $qty_retur = 1;
     public $kondisi_retur = 'BAGUS';
+    public $jenis_retur = 'BATAL_BELI'; // 'BATAL_BELI' (tanpa pengganti, uang dikembalikan) | 'TUKAR' (ganti barang)
     public $jumlah_potong_gudang_retur = 0; // KG fisik yang dikembalikan (editable oleh admin)
     public $satuan_pengganti = ''; // Satuan untuk barang pengganti: 'kg', 'meter', 'pcs', dll
     public $tanggal_retur; // Custom tanggal retur
@@ -76,6 +77,7 @@ class ReturPenjualan extends Component
         
         $this->qty_retur = 1;
         $this->kondisi_retur = 'BAGUS';
+        $this->jenis_retur = 'BATAL_BELI'; // Kasus paling sering: pelanggan tidak jadi beli
         $this->search_produk_pengganti = '';
         $this->catatan = '';
         $this->password_admin = '';
@@ -145,6 +147,7 @@ class ReturPenjualan extends Component
         $sisaMaksimal = $this->detailTerpilih->jumlah - $this->detailTerpilih->jumlah_diretur;
 
         $validationRules = [
+            'jenis_retur' => 'required|in:BATAL_BELI,TUKAR',
             'qty_retur' => "required|numeric|min:0.01|max:$sisaMaksimal",
             'kondisi_retur' => 'required|in:BAGUS,RUSAK',
             'catatan' => 'required|string|min:3',
@@ -166,7 +169,9 @@ class ReturPenjualan extends Component
             return;
         }
 
-        if (!$this->produk_pengganti) {
+        $isTukar = $this->jenis_retur === 'TUKAR';
+
+        if ($isTukar && !$this->produk_pengganti) {
             $this->addError('search_produk_pengganti', 'Pilih barang pengganti terlebih dahulu!');
             return;
         }
@@ -176,20 +181,23 @@ class ReturPenjualan extends Component
             return;
         }
 
-        // Hitung harga pengganti berdasarkan satuan yang dipilih
-        $hargaPenggantiPerUnit = $this->produk_pengganti->harga_jual_satuan; // default: harga KG/satuan utama
-        if ($this->satuan_pengganti === 'meter' && isset($this->produk_pengganti->metadata['harga_meter'])) {
-            $hargaPenggantiPerUnit = $this->produk_pengganti->metadata['harga_meter'];
+        // Hitung harga pengganti berdasarkan satuan yang dipilih (Batal Beli: tidak ada pengganti)
+        $hargaPenggantiPerUnit = null;
+        if ($isTukar) {
+            $hargaPenggantiPerUnit = $this->produk_pengganti->harga_jual_satuan; // default: harga KG/satuan utama
+            if ($this->satuan_pengganti === 'meter' && isset($this->produk_pengganti->metadata['harga_meter'])) {
+                $hargaPenggantiPerUnit = $this->produk_pengganti->metadata['harga_meter'];
+            }
         }
 
         $itemsRetur = [
             [
                 'id_detail_penjualan' => $this->detailTerpilih->id_detail_penjualan,
-                'id_produk_pengganti' => $this->produk_pengganti->id_produk,
+                'id_produk_pengganti' => $isTukar ? $this->produk_pengganti->id_produk : null,
                 'jumlah' => $this->qty_retur,
                 'kondisi_barang_dikembalikan' => $this->kondisi_retur,
                 'jumlah_potong_gudang_retur' => $isDualUnit ? $this->jumlah_potong_gudang_retur : null,
-                'satuan_pengganti' => $this->satuan_pengganti,
+                'satuan_pengganti' => $isTukar ? $this->satuan_pengganti : null,
                 'harga_pengganti_per_unit' => $hargaPenggantiPerUnit,
             ]
         ];
@@ -198,7 +206,7 @@ class ReturPenjualan extends Component
         $tanggalReturParsed = Carbon::parse($this->tanggal_retur);
 
         try {
-            $returnService->prosesRetur(
+            $retur = $returnService->prosesRetur(
                 $this->notaTerpilih->id_transaksi_penjualan,
                 Auth::id(),
                 $itemsRetur,
@@ -206,7 +214,11 @@ class ReturPenjualan extends Component
                 $tanggalReturParsed
             );
 
-            session()->flash('sukses', 'Proses Retur Berhasil! Mutasi stok & uang telah disesuaikan.');
+            if ($isTukar) {
+                session()->flash('sukses', 'Proses Retur Berhasil! Mutasi stok & uang telah disesuaikan.');
+            } else {
+                session()->flash('sukses', 'Retur Batal Beli berhasil! Uang dikembalikan ke pelanggan: Rp ' . number_format(abs($retur->total_biaya_retur), 0, ',', '.') . '.');
+            }
             $this->notaTerpilih->refresh(); 
             $this->tutupModalRetur();
 
@@ -248,7 +260,7 @@ class ReturPenjualan extends Component
         }
 
         $hasil_pencarian_produk = collect();
-        if ($this->showReturModal && !empty(trim($this->search_produk_pengganti))) {
+        if ($this->showReturModal && $this->jenis_retur === 'TUKAR' && !empty(trim($this->search_produk_pengganti))) {
             $queryProduk = Produk::where('status_aktif', true);
             $terms = explode(' ', trim(strtolower($this->search_produk_pengganti)));
             
