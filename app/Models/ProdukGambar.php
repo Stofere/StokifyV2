@@ -37,4 +37,14 @@ class ProdukGambar extends Model
     {
         return '/storage/'.$this->path_thumbnail;
     }
+
+    // Nama file saat download: nama asli dari pengunggah, tapi ekstensinya selalu .jpg
+    // (isinya memang selalu JPEG hasil encode ulang), jadi nama seperti "x.php" tidak ikut terbawa.
+    public function namaDownload(): string
+    {
+        $nama = str_replace(['/', '\\'], '-', (string) $this->nama_asli);
+        $nama = trim(pathinfo($nama, PATHINFO_FILENAME));
+
+        return ($nama !== '' ? $nama : 'foto-produk').'.jpg';
+    }
 }

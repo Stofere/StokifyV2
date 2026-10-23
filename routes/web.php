@@ -41,12 +41,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/laporan/katalog', KatalogProduk::class)->name('laporan.katalog');
     Route::get('/laporan/stok-menipis', StokMenipis::class)->name('laporan.stok-menipis');
 
-    // Download foto produk (force-download dengan nama file asli)
+    // Download foto produk (force-download dengan nama file asli, ekstensi selalu .jpg)
     Route::get('/produk-foto/download/{gambar}', function (ProdukGambar $gambar) {
         abort_unless(Storage::disk('public')->exists($gambar->path), 404);
 
-        return Storage::disk('public')->download($gambar->path, $gambar->nama_asli ?: 'foto-produk.jpg');
-    })->name('produk.foto.download');
+        return Storage::disk('public')->download($gambar->path, $gambar->namaDownload());
+    })->middleware('throttle:60,1')->name('produk.foto.download');
 
     // Master Data
     Route::get('/master/pelanggan', PelangganIndex::class)->name('master.pelanggan');
