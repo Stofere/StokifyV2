@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
+use Intervention\Image\Format;
 use Intervention\Image\ImageManager;
 
 /**
@@ -18,7 +20,10 @@ use Intervention\Image\ImageManager;
  *  - THUMBNAIL (path_thumbnail) : JPEG ringan (q75), maks 400px -> hanya untuk tampilan di katalog.
  *
  * Tujuan: download tetap tajam, tapi tampilan layar ringan (anti-lemot, hemat bandwidth).
- * Memakai driver GD (tersedia di server) + auto-orient EXIF agar foto HP tidak miring.
+ * Memakai driver GD (tersedia di server) + orient EXIF agar foto HP tidak miring.
+ *
+ * for security needs: semua gambar di-encode ulang (tidak pernah disimpan apa adanya), dengan random name
+ * sehingga isi tersembunyi di dalam file (mis. kode PHP) ikut terbuang.
  */
 class ImageService
 {
@@ -34,7 +39,9 @@ class ImageService
 
     public function __construct()
     {
-        $this->manager = new ImageManager(new Driver);
+        // autoOrientation dimatikan: orient() dipanggil manual SETELAH gambar diperkecil,
+        // supaya rotasi tidak dikerjakan pada gambar ukuran penuh (hemat RAM).
+        $this->manager = new ImageManager(new Driver, autoOrientation: false);
     }
 
     /**
@@ -49,17 +56,18 @@ class ImageService
         $pathBesar = "{$folder}/{$basename}.jpg";
         $pathThumb = "{$folder}/thumb_{$basename}.jpg";
 
-        // Versi BESAR (download) - auto-orient, kecilkan jika > 2500px, encode q90
-        $besar = $this->manager->decodePath($file->getRealPath())
-            ->orient()
+        // Decode SEKALI saja. Kecilkan dulu (jika > 2500px), baru luruskan sesuai EXIF:
+        // hasilnya sama, tapi puncak pemakaian RAM jauh lebih kecil.
+        $gambar = $this->manager->decodePath($file->getRealPath())
             ->scaleDown(self::MAKS_BESAR, self::MAKS_BESAR)
-            ->encode(new JpegEncoder(quality: self::KUALITAS_BESAR, strip: true));
+            ->orient();
+
+        // Versi BESAR (download) - encode q90
+        $besar = $gambar->encode(new JpegEncoder(quality: self::KUALITAS_BESAR, strip: true));
         Storage::disk('public')->put($pathBesar, (string) $besar);
 
-        // Versi THUMBNAIL (tampilan) - maks 400px, encode q75
-        $thumb = $this->manager->decodePath($file->getRealPath())
-            ->orient()
-            ->scaleDown(self::MAKS_THUMB, self::MAKS_THUMB)
+        // Versi THUMBNAIL (tampilan) - diperkecil dari versi besar, maks 400px, encode q75
+        $thumb = $gambar->scaleDown(self::MAKS_THUMB, self::MAKS_THUMB)
             ->encode(new JpegEncoder(quality: self::KUALITAS_THUMB, strip: true));
         Storage::disk('public')->put($pathThumb, (string) $thumb);
 
@@ -68,6 +76,28 @@ class ImageService
             'path_thumbnail' => $pathThumb,
             'nama_asli' => $file->getClientOriginalName(),
         ];
+    }
+
+    /**
+     * Proses background halaman POS -> simpan ke disk public, kembalikan path relatifnya.
+     *
+     * JPEG -> JPEG q90; PNG/WebP -> WebP q90 agar transparansi tetap terjaga. Maks 2500px.
+     */
+    public function simpanBackgroundPos(UploadedFile $file): string
+    {
+        $gambar = $this->manager->decodePath($file->getRealPath())
+            ->scaleDown(self::MAKS_BESAR, self::MAKS_BESAR)
+            ->orient();
+
+        $asalJpeg = $gambar->origin()->format() === Format::JPEG;
+        $path = 'pos-backgrounds/'.Str::uuid()->toString().($asalJpeg ? '.jpg' : '.webp');
+
+        $hasil = $gambar->encode($asalJpeg
+            ? new JpegEncoder(quality: self::KUALITAS_BESAR, strip: true)
+            : new WebpEncoder(quality: self::KUALITAS_BESAR, strip: true));
+        Storage::disk('public')->put($path, (string) $hasil);
+
+        return $path;
     }
 
     /**
