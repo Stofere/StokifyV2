@@ -1,0 +1,25 @@
+# Folder upload gambar (dilayani lewat public/storage). Tidak boleh ada skrip yang berjalan di sini.
+# Berlaku untuk Apache (Laragon). Di VPS (Nginx) aturan yang sama ada di deploy/nginx/.
+
+Options -Indexes -ExecCGI
+
+# Matikan PHP di folder ini
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .phar .pht .phps .php3 .php4 .php5 .php7 .php8
+RemoveType .php .phtml .phar .pht .phps .php3 .php4 .php5 .php7 .php8
+
+# Tolak semua file...
+Require all denied
+
+# ...kecuali gambar (termasuk tipe lama yang mungkin sudah tersimpan sebelumnya)
+<FilesMatch "(?i)\.(jpe?g|png|webp|gif|bmp|svg)$">
+    Require all granted
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    # Jika file dibuka langsung di browser, tidak ada skrip yang boleh berjalan (mis. SVG lama)
+    Header always set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+</IfModule>
